@@ -10,6 +10,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using RomajiConverter.WinUI.Extensions;
 using RomajiConverter.Core.Models;
+using System.Threading.Tasks;
 
 namespace RomajiConverter.WinUI.Pages;
 
@@ -62,12 +63,17 @@ public sealed partial class OutputPage : Page
                 {
                     result.Append(unit.Romaji);
                 }
-                else if (unit.PartsOfSpeech == "助詞" || unit.PartsOfSpeech == "接尾詞")
+                else if (unit.Pos1 == "助詞" || unit.Pos1 == "助動詞" || unit.Pos1 == "接尾辞")
                 {
-                    // 조사 또는 접미사인 경우 공백 없이 바로 추가
+                    // 조사 또는 조동사 또는 접미사인 경우 공백 없이 바로 추가
                     result.Append(unit.Romaji);
                 }
-                else if (previous.PartsOfSpeech == "接頭詞")
+                else if (unit.Pos1 == "動詞" && unit.Pos2 == " 非自立可能")
+                {
+                    //비자립가능 동사일 경우 공백 없이 바로 추가
+                    result.Append(unit.Romaji);
+                }
+                else if (previous.Pos1 == "接頭辞")
                 {
                     // 앞 형태소가 접두사인 경우 공백 없이 바로 추가
                     result.Append(unit.Romaji);
@@ -173,7 +179,7 @@ public sealed partial class OutputPage : Page
             {
                 //output.AppendLine(GetString(item.Units.Select(p => p.Hiragana)));
                 output.AppendLine(GetStringWithParticles(item.Units.Select(p =>
-                new ConvertedUnit(p.Japanese, p.Hiragana, p.Hiragana, p.IsKanji, p.PartsOfSpeech))));
+                new ConvertedUnit(p.Japanese, p.Hiragana, p.Hiragana, p.IsKanji, p.Pos1, p.Pos2))));
             }
 
             if (RomajiCheckBox.IsOn)
@@ -210,9 +216,16 @@ public sealed partial class OutputPage : Page
     /// <param name="e"></param>
     private void CopyButton_OnTapped(object sender, TappedRoutedEventArgs e)
     {
-        var dataPackage = new DataPackage();
-        dataPackage.SetText(OutputTextBox.Text);
-        Clipboard.SetContent(dataPackage);
+        try
+        {
+            var dataPackage = new DataPackage();
+            dataPackage.SetText(OutputTextBox.Text);
+            Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(dataPackage);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"클립보드 복사 오류: {ex.Message}");
+        }
     }
 
     /// <summary>
