@@ -73,18 +73,20 @@ public static class KanaHelper
             var word = str[i].ToString();
             if (KanaDictionary.ContainsKey(word))
             {
+                //장음 처리
+                if(i > 0 && (KanaDictionary[word] == "아" || KanaDictionary[word] == "이" || KanaDictionary[word] == "우" ||
+                    KanaDictionary[word] == "에" || KanaDictionary[word] == "오") 
+                    && result.Length > 0 && IsLongsound(result[result.Length - 1], KanaDictionary[word][0]))
+                {
+                    result.Append("-");
+                }
                 //일반적인 변환
-                result.Append(KanaDictionary[word]);
+                else result.Append(KanaDictionary[word]);
             }
             else if (word == "ー")
             {
                 //장음 - 처리
                 result.Append("-");
-            }
-            else if (IsSpecialCharacter(str[i]))
-            {
-                //특수문자인 경우
-                //pass
             }
             else
             {
@@ -98,6 +100,7 @@ public static class KanaHelper
         //촉음, n 처리
         for (var i = 0; i < result.Length; i++)
         {
+            //촉음
             if (result[i] == 'っ' || result[i] == 'ッ')
             {
                 // 현재 위치가 0이거나 이전 문자를 참조할 수 없는 경우
@@ -107,30 +110,19 @@ public static class KanaHelper
                     continue;
                 }
 
-                // 이전 문자를 안전하게 참조
-                var last_c = i - 1;
-                while (last_c >= 0 && !IsHangulWithoutBatchim(result[last_c]))
+                if (i > 0)
                 {
-                    last_c--;
-                    if (last_c < 0)
-                    {
-                        result[i] = 'ㅅ'; // 기본값으로 처리
-                        break;
-                    }
-                }
-
-                if (last_c >= 0)
-                {
-                    int unicodeIndex = result[last_c] - 0xAC00;
+                    int unicodeIndex = result[i - 1] - 0xAC00;
                     int jungseong = (unicodeIndex / 28) % 21;
                     int choseong = unicodeIndex / (21 * 28);
                     int newChar = 0xAC00 + (choseong * 21 * 28) + (jungseong * 28) + 19;
-                    result[last_c] = (char)newChar;
+                    result[i - 1] = (char)newChar;
                 }
 
                 result.Remove(i, 1); // 현재 'っ' 제거
                 i--; // 인덱스 조정
             }
+            //n
             if (result[i] == 'ん' || result[i] == 'ン')
             {
                 // 현재 위치가 0이거나 이전 문자를 참조할 수 없는 경우
@@ -140,25 +132,13 @@ public static class KanaHelper
                     continue;
                 }
 
-                // 이전 문자를 안전하게 참조
-                var last_c = i - 1;
-                while (last_c >= 0 && !IsHangulWithoutBatchim(result[last_c]))
+                if (i > 0)
                 {
-                    last_c--;
-                    if (last_c < 0)
-                    {
-                        result[i] = 'ㄴ'; // 기본값으로 처리
-                        break;
-                    }
-                }
-
-                if (last_c >= 0)
-                {
-                    int unicodeIndex = result[last_c] - 0xAC00;
+                    int unicodeIndex = result[i - 1] - 0xAC00;
                     int jungseong = (unicodeIndex / 28) % 21;
                     int choseong = unicodeIndex / (21 * 28);
                     int newChar = 0xAC00 + (choseong * 21 * 28) + (jungseong * 28) + 4;
-                    result[last_c] = (char)newChar;
+                    result[i - 1] = (char)newChar;
                 }
 
                 result.Remove(i, 1); // 현재 'ん' 제거
@@ -167,35 +147,6 @@ public static class KanaHelper
         }
 
         return result.ToString();
-    }
-
-    //특수문자인지 확인하는 메서드
-    public static bool IsSpecialCharacter(char ch)
-    {
-        var category = CharUnicodeInfo.GetUnicodeCategory(ch);
-
-        // 일반적인 특수문자: 기호(Symbol), 문장 부호(Punctuation)
-        if (category == UnicodeCategory.OtherPunctuation ||
-            category == UnicodeCategory.DashPunctuation ||
-            category == UnicodeCategory.MathSymbol ||
-            category == UnicodeCategory.CurrencySymbol ||
-            category == UnicodeCategory.ModifierSymbol ||
-            category == UnicodeCategory.OtherSymbol)
-        {
-            return true;
-        }
-
-        // 일본어 특수문자 예외 처리 (예: 〜、・、「」 등)
-        // 이들 문자는 일부는 OtherPunctuation이지만, 추가 필터링 가능
-        int code = (int)ch;
-        // 일본어 특수문자 유니코드 범위에 포함되는 경우
-        if ((code >= 0x3000 && code <= 0x303F) || // CJK 기호 및 구두점
-            (code >= 0xFF00 && code <= 0xFFEF))  // 반각/전각 문자
-        {
-            return true;
-        }
-
-        return false;
     }
 
     //한글이 초성 중성만 있는지 확인하는 메서드
@@ -210,6 +161,35 @@ public static class KanaHelper
 
         // 종성 인덱스가 0이면 받침 없음
         return jongseongIndex == 0;
+    }
+
+    //이전 한글 문자와 현재 한글 문자가 같은 중성을 가지면서 현재 한글 문자가 초성이 'ㅇ'인지 확인하는 메서드
+    public static bool IsLongsound(char prev, char current)
+    {
+        // 한글 완성형인지 확인
+        if (prev < 0xAC00 || prev > 0xD7A3 || current < 0xAC00 || current > 0xD7A3)
+            return false;
+
+        int prevIndex = prev - 0xAC00;
+        int currIndex = current - 0xAC00;
+
+        int prevJungseong = (prevIndex % (21 * 28)) / 28;
+        int currJungseong = (currIndex % (21 * 28)) / 28;
+        int currChoseong = currIndex / (21 * 28);
+
+        // 초성 'ㅇ' 인덱스는 11
+        bool isIeung = (currChoseong == 11);
+
+        // 예외 중성 쌍
+        bool isSpecialJungseongPair =
+            (prevJungseong == 8 && currJungseong == 13) || // ㅗ → ㅜ
+            (prevJungseong == 6 && currJungseong == 0) || // ㅑ → ㅏ
+            (prevJungseong == 7 && currJungseong == 4) || // ㅕ → ㅓ
+            (prevJungseong == 12 && currJungseong == 8) || // ㅛ → ㅗ
+            (prevJungseong == 12 && currJungseong == 13) || // ㅛ → ㅜ
+            (prevJungseong == 17 && currJungseong == 13);   // ㅠ → ㅜ
+
+        return isIeung && (prevJungseong == currJungseong || isSpecialJungseongPair);
     }
 
     public static Dictionary<string, string> KanaDictionary = new Dictionary<string, string>

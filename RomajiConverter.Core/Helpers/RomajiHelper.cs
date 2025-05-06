@@ -173,9 +173,9 @@ public static class RomajiHelper
                     //구두점이나 인식 불가 문자 처리
                     unit = new ConvertedUnit(item.Surface,
                         item.Surface,
-                        item.Surface,
+                        "",
                         false,
-                        false);
+                        true);//조사처럼 앞에 띄어쓰기 없도록
                 }
                 else if (IsEnglish(item.Surface))
                 {

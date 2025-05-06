@@ -76,26 +76,67 @@ public sealed partial class OutputPage : Page
                 previous = unit;
             }
 
-            return result.ToString();
+            var resultString = result.ToString();
+
+            // 라인의 첫 번째 문자가 공백이면 제거
+            if (resultString.StartsWith(" "))
+            {
+                resultString = resultString.TrimStart();
+            }
+
+            if (resultString.Length > 1)
+            {
+                StringBuilder finalResult = new StringBuilder(resultString.Length);
+                char[] singleJamos = new[] { 'ㅅ', 'ㄴ' };
+
+                for (int i = 0; i < resultString.Length; i++)
+                {
+                    char current = resultString[i];
+
+                    // ㅅ 또는 ㄴ이 단독으로 존재하고, 앞 글자가 있는 경우
+                    if (i > 0 && singleJamos.Contains(current))
+                    {
+                        char previous_char = resultString[i - 1];
+
+                        // 앞 글자가 한글 완성형인지 확인 (가-힣 범위: U+AC00-U+D7A3)
+                        if (previous_char >= 0xAC00 && previous_char <= 0xD7A3)
+                        {
+                            // 한글 조합을 위한 계산
+                            int unicodeValue = previous_char;
+                            int baseCode = 0xAC00;
+                            int choseongIndex = (unicodeValue - baseCode) / (21 * 28);
+                            int jungseongIndex = ((unicodeValue - baseCode) % (21 * 28)) / 28;
+                            int jongseongIndex = 0;
+
+                            // ㅅ이면 19번 종성, ㄴ이면 4번 종성으로 설정
+                            if (current == 'ㅅ')
+                                jongseongIndex = 19; // ㅅ 종성 인덱스
+                            else if (current == 'ㄴ')
+                                jongseongIndex = 4;  // ㄴ 종성 인덱스
+
+                            // 새 문자 생성
+                            char newChar = (char)(baseCode + (choseongIndex * 21 * 28) + (jungseongIndex * 28) + jongseongIndex);
+
+                            // 결과에 추가 (이전 글자는 제거, 새 글자 추가)
+                            finalResult.Length--; // 마지막 글자 제거
+                            finalResult.Append(newChar);
+                            continue; // 현재 문자는 처리 완료했으므로 건너뛰기
+                        }
+                    }
+
+                    // 일반 문자는 그대로 추가
+                    finalResult.Append(current);
+                }
+
+                resultString = finalResult.ToString();
+            }
+            return resultString;
         }
 
         var output = new StringBuilder();
         for (var i = 0; i < App.ConvertedLineList.Count; i++)
         {
             var item = App.ConvertedLineList[i];
-            if (RomajiCheckBox.IsOn)
-            {
-                //output.AppendLine(GetString(item.Units.Select(p => p.Romaji)));
-                output.AppendLine(GetStringWithParticles(item.Units));
-            }
-
-            if (HiraganaCheckBox.IsOn)
-            {
-                //output.AppendLine(GetString(item.Units.Select(p => p.Hiragana)));
-                output.AppendLine(GetStringWithParticles(item.Units.Select(p =>
-                new ConvertedUnit(p.Japanese, p.Hiragana, p.Hiragana, p.IsKanji, p.IsParticle))));
-            }
-
             if (JPCheckBox.IsOn)
             {
                 if (KanjiHiraganaCheckBox.IsOn)
@@ -121,6 +162,19 @@ public sealed partial class OutputPage : Page
                 {
                     output.AppendLine(item.Japanese);
                 }
+            }
+
+            if (HiraganaCheckBox.IsOn)
+            {
+                //output.AppendLine(GetString(item.Units.Select(p => p.Hiragana)));
+                output.AppendLine(GetStringWithParticles(item.Units.Select(p =>
+                new ConvertedUnit(p.Japanese, p.Hiragana, p.Hiragana, p.IsKanji, p.IsParticle))));
+            }
+
+            if (RomajiCheckBox.IsOn)
+            {
+                //output.AppendLine(GetString(item.Units.Select(p => p.Romaji)));
+                output.AppendLine(GetStringWithParticles(item.Units));
             }
 
             if (CHCheckBox.IsOn && !string.IsNullOrWhiteSpace(item.Chinese))
