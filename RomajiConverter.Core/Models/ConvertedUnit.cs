@@ -8,20 +8,20 @@ public class ConvertedUnit : INotifyPropertyChanged
 {
     private string _hiragana;
     private bool _isKanji;
-    private bool _isParticle;
+    private string _partsOfSpeech;
     private string _japanese;
     private ObservableCollection<ReplaceString> _replaceHiragana;
     private ObservableCollection<ReplaceString> _replaceRomaji;
     private string _romaji;
     private ushort _selectId;
 
-    public ConvertedUnit(string japanese, string hiragana, string romaji, bool isKanji, bool isParticle)
+    public ConvertedUnit(string japanese, string hiragana, string romaji, bool isKanji, string partsOfSpeech)
     {
         Japanese = japanese;
         Romaji = romaji;
         Hiragana = hiragana;
         IsKanji = isKanji;
-        IsParticle = isParticle;
+        PartsOfSpeech = partsOfSpeech;
         SelectId = 1;
         ReplaceHiragana = new ObservableCollection<ReplaceString> { new(1, hiragana, true) };
         ReplaceRomaji = new ObservableCollection<ReplaceString> { new(1, romaji, true) };
@@ -92,12 +92,13 @@ public class ConvertedUnit : INotifyPropertyChanged
             OnPropertyChanged();
         }
     }
-    public bool IsParticle
+    public string PartsOfSpeech
     {
-        get => _isParticle;
+        get => _partsOfSpeech;
         set
         {
-            _isParticle = value;
+            if (value == _partsOfSpeech) return;
+            _partsOfSpeech = value;
             OnPropertyChanged();
         }
     }

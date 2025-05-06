@@ -62,9 +62,14 @@ public sealed partial class OutputPage : Page
                 {
                     result.Append(unit.Romaji);
                 }
-                else if (unit.IsParticle)
+                else if (unit.PartsOfSpeech == "助詞" || unit.PartsOfSpeech == "接尾詞")
                 {
-                    // 조사인 경우 공백 없이 바로 추가
+                    // 조사 또는 접미사인 경우 공백 없이 바로 추가
+                    result.Append(unit.Romaji);
+                }
+                else if (previous.PartsOfSpeech == "接頭詞")
+                {
+                    // 앞 형태소가 접두사인 경우 공백 없이 바로 추가
                     result.Append(unit.Romaji);
                 }
                 else
@@ -168,7 +173,7 @@ public sealed partial class OutputPage : Page
             {
                 //output.AppendLine(GetString(item.Units.Select(p => p.Hiragana)));
                 output.AppendLine(GetStringWithParticles(item.Units.Select(p =>
-                new ConvertedUnit(p.Japanese, p.Hiragana, p.Hiragana, p.IsKanji, p.IsParticle))));
+                new ConvertedUnit(p.Japanese, p.Hiragana, p.Hiragana, p.IsKanji, p.PartsOfSpeech))));
             }
 
             if (RomajiCheckBox.IsOn)
