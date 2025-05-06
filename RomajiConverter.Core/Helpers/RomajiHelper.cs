@@ -69,7 +69,7 @@ public static class RomajiHelper
 
             convertedLine.Japanese = line.Replace("\0", ""); //文本中如果包含\0，会导致复制只能粘贴到第一个\0处，需要替换为空，以下同理
 
-            var sentences = line.LineToUnits(); //将行拆分为分句
+            var sentences = line.LineToUnits(); //줄을 절로 나눔
             var multiUnits = new List<ConvertedUnit[]>();
             foreach (var sentence in sentences)
             {
@@ -81,7 +81,7 @@ public static class RomajiHelper
 
                 var units = SentenceToRomaji(sentence);
 
-                //变体处理
+                //변형 처리
                 if (isAutoVariant)
                 {
                     var regex = new Regex("[^a-zA-Z0-9 ]", RegexOptions.Compiled);
@@ -151,7 +151,7 @@ public static class RomajiHelper
                 var features = CustomSplit(item.Feature);
                 if (TryCustomConvert(item.Surface, out var customResult))
                 {
-                    //用户自定义词典
+                    //사용자 정의 사전 확인
                     unit = new ConvertedUnit(item.Surface,
                         customResult,
                         KanaHelper.KatakanaToRomaji(customResult),
@@ -159,7 +159,7 @@ public static class RomajiHelper
                 }
                 else if (features.Length > 0 && item.GetPos1() != "助詞" && IsJapanese(item.Surface))
                 {
-                    //纯假名
+                    //순수 가나확인
                     unit = new ConvertedUnit(item.Surface,
                         KanaHelper.ToHiragana(item.Surface),
                         KanaHelper.KatakanaToRomaji(item.Surface),
@@ -167,7 +167,7 @@ public static class RomajiHelper
                 }
                 else if (features.Length <= 6 || new[] { "補助記号" }.Contains(item.GetPos1()))
                 {
-                    //标点符号或无法识别的字
+                    //구두점이나 인식 불가 문자 처리
                     unit = new ConvertedUnit(item.Surface,
                         item.Surface,
                         item.Surface,
@@ -175,7 +175,7 @@ public static class RomajiHelper
                 }
                 else if (IsEnglish(item.Surface))
                 {
-                    //英文
+                    //영어
                     unit = new ConvertedUnit(item.Surface,
                         item.Surface,
                         item.Surface,
@@ -183,7 +183,7 @@ public static class RomajiHelper
                 }
                 else
                 {
-                    //汉字或助词
+                    //한자나 조사 처리
                     var kana = GetKana(item);
 
                     unit = new ConvertedUnit(item.Surface,
