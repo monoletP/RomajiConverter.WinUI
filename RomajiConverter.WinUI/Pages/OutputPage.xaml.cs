@@ -9,6 +9,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using RomajiConverter.WinUI.Extensions;
+using RomajiConverter.Core.Models;
 
 namespace RomajiConverter.WinUI.Pages;
 
@@ -41,9 +42,41 @@ public sealed partial class OutputPage : Page
     /// <returns></returns>
     private string GetResultText()
     {
+        /*
         string GetString(IEnumerable<string> array)
         {
             return string.Join(SpaceCheckBox.IsOn ? " " : "", array);
+        }*/
+        string GetStringWithParticles(IEnumerable<ConvertedUnit> units)
+        {
+            if (!SpaceCheckBox.IsOn)
+                return string.Join("", units.Select(p => p.Romaji));
+
+            // 공백 처리가 활성화된 경우 조사를 앞 단어와 붙임
+            var result = new StringBuilder();
+            ConvertedUnit previous = null;
+
+            foreach (var unit in units)
+            {
+                if (previous == null)
+                {
+                    result.Append(unit.Romaji);
+                }
+                else if (unit.IsParticle)
+                {
+                    // 조사인 경우 공백 없이 바로 추가
+                    result.Append(unit.Romaji);
+                }
+                else
+                {
+                    // 조사가 아닌 경우 공백 추가
+                    result.Append(" ").Append(unit.Romaji);
+                }
+
+                previous = unit;
+            }
+
+            return result.ToString();
         }
 
         var output = new StringBuilder();
@@ -51,9 +84,18 @@ public sealed partial class OutputPage : Page
         {
             var item = App.ConvertedLineList[i];
             if (RomajiCheckBox.IsOn)
-                output.AppendLine(GetString(item.Units.Select(p => p.Romaji)));
+            {
+                //output.AppendLine(GetString(item.Units.Select(p => p.Romaji)));
+                output.AppendLine(GetStringWithParticles(item.Units));
+            }
+
             if (HiraganaCheckBox.IsOn)
-                output.AppendLine(GetString(item.Units.Select(p => p.Hiragana)));
+            {
+                //output.AppendLine(GetString(item.Units.Select(p => p.Hiragana)));
+                output.AppendLine(GetStringWithParticles(item.Units.Select(p =>
+                new ConvertedUnit(p.Japanese, p.Hiragana, p.Hiragana, p.IsKanji, p.IsParticle))));
+            }
+
             if (JPCheckBox.IsOn)
             {
                 if (KanjiHiraganaCheckBox.IsOn)

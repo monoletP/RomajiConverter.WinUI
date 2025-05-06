@@ -75,7 +75,7 @@ public static class RomajiHelper
             {
                 if (IsEnglish(sentence))
                 {
-                    multiUnits.Add(new[] { new ConvertedUnit(sentence, sentence, sentence, false) });
+                    multiUnits.Add(new[] { new ConvertedUnit(sentence, sentence, sentence, false, false) });
                     continue;
                 }
 
@@ -146,6 +146,7 @@ public static class RomajiHelper
         foreach (var item in list)
         {
             ConvertedUnit unit = null;
+            bool isParticle = item.CharType > 0 && item.GetPos1() == "助詞";
             if (item.CharType > 0)
             {
                 var features = CustomSplit(item.Feature);
@@ -155,7 +156,8 @@ public static class RomajiHelper
                     unit = new ConvertedUnit(item.Surface,
                         customResult,
                         KanaHelper.KatakanaToRomaji(customResult),
-                        true);
+                        true,
+                        isParticle);
                 }
                 else if (features.Length > 0 && item.GetPos1() != "助詞" && IsJapanese(item.Surface))
                 {
@@ -163,6 +165,7 @@ public static class RomajiHelper
                     unit = new ConvertedUnit(item.Surface,
                         KanaHelper.ToHiragana(item.Surface),
                         KanaHelper.KatakanaToRomaji(item.Surface),
+                        false,
                         false);
                 }
                 else if (features.Length <= 6 || new[] { "補助記号" }.Contains(item.GetPos1()))
@@ -171,6 +174,7 @@ public static class RomajiHelper
                     unit = new ConvertedUnit(item.Surface,
                         item.Surface,
                         item.Surface,
+                        false,
                         false);
                 }
                 else if (IsEnglish(item.Surface))
@@ -179,6 +183,7 @@ public static class RomajiHelper
                     unit = new ConvertedUnit(item.Surface,
                         item.Surface,
                         item.Surface,
+                        false,
                         false);
                 }
                 else
@@ -189,7 +194,8 @@ public static class RomajiHelper
                     unit = new ConvertedUnit(item.Surface,
                         KanaHelper.ToHiragana(kana),
                         KanaHelper.KatakanaToRomaji(kana),
-                        !IsJapanese(item.Surface));
+                        !IsJapanese(item.Surface),
+                        isParticle);
                     var (replaceHiragana, replaceRomaji) = GetReplaceData(item);
                     unit.ReplaceHiragana = replaceHiragana;
                     unit.ReplaceRomaji = replaceRomaji;
@@ -200,6 +206,7 @@ public static class RomajiHelper
                 unit = new ConvertedUnit(item.Surface,
                     item.Surface,
                     item.Surface,
+                    false,
                     false);
             }
 
