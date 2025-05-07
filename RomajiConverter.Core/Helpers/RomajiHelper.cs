@@ -173,7 +173,7 @@ public static class RomajiHelper
                     //순수 가나확인
                     unit = new ConvertedUnit(item.Surface,
                         KanaHelper.ToHiragana(item.Surface),
-                        KanaHelper.KatakanaToRomaji(item.Surface),
+                        KanaHelper.ConvertLongSound(KanaHelper.KatakanaToRomaji(item.Surface)),
                         false,
                         pos1,
                         pos2,
@@ -216,7 +216,7 @@ public static class RomajiHelper
                 {
                     //한자나 조사 처리
                     //var kana = GetKana(item);
-                    var pron = item.GetPron();
+                    var pron = GetPron(item);
 
                     unit = new ConvertedUnit(item.Surface,
                         KanaHelper.ToHiragana(pron),
@@ -282,7 +282,7 @@ public static class RomajiHelper
     }
 
     /// <summary>
-    /// 获取所有发音
+    /// 모든 발음 가져오기
     /// </summary>
     /// <param name="node"></param>
     /// <returns></returns>
@@ -308,9 +308,9 @@ public static class RomajiHelper
         var replaceRomaji = new ObservableCollection<ReplaceString>();
 
         ushort i = 1;
-        foreach (var meCabNode in replaceNodeList.DistinctBy(GetKana))
+        foreach (var meCabNode in replaceNodeList.DistinctBy(GetPron))
         {
-            var kana = GetKana(meCabNode);
+            var kana = GetPron(meCabNode);
             if (kana != null)
             {
                 replaceHiragana.Add(new ReplaceString(i, KanaHelper.ToHiragana(kana), true));
@@ -325,6 +325,11 @@ public static class RomajiHelper
     private static string GetKana(MeCabNode node)
     {
         return node.GetPos1() == "助詞" ? node.GetPron() : node.GetKana();
+    }
+
+    private static string GetPron(MeCabNode node)
+    {
+        return node.GetPron();
     }
 
     /// <summary>
