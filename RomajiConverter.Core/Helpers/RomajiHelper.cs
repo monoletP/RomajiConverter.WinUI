@@ -154,6 +154,7 @@ public static class RomajiHelper
             if (item.CharType > 0)
             {
                 var features = CustomSplit(item.Feature);
+                Console.WriteLine($"features Length: {features.Length}, ");
                 if (TryCustomConvert(item.Surface, out var customResult))
                 {
                     //사용자 정의 사전 확인
@@ -174,24 +175,26 @@ public static class RomajiHelper
                         pos1,
                         pos2);
                 }
-                else if (features.Length <= 6 || new[] { "補助記号" }.Contains(item.GetPos1()))
-                {
-                    //구두점이나 인식 불가 문자 처리
-                    unit = new ConvertedUnit(item.Surface,
-                        item.Surface,
-                        "",
-                        false,
-                        "助詞",//조사처럼 앞에 띄어쓰기 없도록
-                        pos2);
-                }
                 else if (IsEnglish(item.Surface))
                 {
+                    Console.WriteLine($"English");
                     //영어
                     unit = new ConvertedUnit(item.Surface,
                         item.Surface,
                         item.Surface,
                         false,
                         pos1,
+                        pos2);
+                }
+                else if (features.Length <= 6 || new[] { "補助記号" }.Contains(item.GetPos1()))
+                {
+                    Console.WriteLine($"Fail");
+                    //구두점이나 인식 불가 문자 처리
+                    unit = new ConvertedUnit(item.Surface,
+                        item.Surface,
+                        "",
+                        false,
+                        "助詞",//조사처럼 앞에 띄어쓰기 없도록
                         pos2);
                 }
                 else
