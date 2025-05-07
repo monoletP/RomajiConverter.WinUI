@@ -75,7 +75,7 @@ public static class RomajiHelper
             {
                 if (IsEnglish(sentence))
                 {
-                    multiUnits.Add(new[] { new ConvertedUnit(sentence, sentence, sentence, false, "", "") });
+                    multiUnits.Add(new[] { new ConvertedUnit(sentence, sentence, sentence, false, "", "", "") });
                     continue;
                 }
 
@@ -148,6 +148,7 @@ public static class RomajiHelper
             ConvertedUnit unit = null;
             string pos1 = item.GetPos1();
             string pos2 = item.GetPos2();
+            string pos3 = item.GetPos3();
             // 디버깅용 출력
             Console.WriteLine($"Word: {item.Surface}, POS1: {item.GetPos1()}, POS2: {item.GetPos2()}, POS3: {item.GetPos3()}, POS4: {item.GetPos4()}, ");
 
@@ -163,7 +164,8 @@ public static class RomajiHelper
                         KanaHelper.KatakanaToRomaji(customResult),
                         true,
                         pos1,
-                        pos2);
+                        pos2,
+                        pos3);
                 }
                 else if (features.Length > 0 && item.GetPos1() != "助詞" && IsJapanese(item.Surface))
                 {
@@ -173,7 +175,8 @@ public static class RomajiHelper
                         KanaHelper.KatakanaToRomaji(item.Surface),
                         false,
                         pos1,
-                        pos2);
+                        pos2,
+                        pos3);
                 }
                 else if (IsEnglish(item.Surface))
                 {
@@ -184,7 +187,8 @@ public static class RomajiHelper
                         item.Surface,
                         false,
                         pos1,
-                        pos2);
+                        pos2,
+                        pos3);
                 }
                 else if (features.Length <= 6 || new[] { "補助記号" }.Contains(item.GetPos1()))
                 {
@@ -195,7 +199,8 @@ public static class RomajiHelper
                         "",
                         false,
                         "助詞",//조사처럼 앞에 띄어쓰기 없도록
-                        pos2);
+                        pos2,
+                        pos3);
                 }
                 else
                 {
@@ -207,7 +212,8 @@ public static class RomajiHelper
                         KanaHelper.KatakanaToRomaji(kana),
                         !IsJapanese(item.Surface),
                         pos1,
-                        pos2);
+                        pos2,
+                        pos3);
                     var (replaceHiragana, replaceRomaji) = GetReplaceData(item);
                     unit.ReplaceHiragana = replaceHiragana;
                     unit.ReplaceRomaji = replaceRomaji;
@@ -220,7 +226,8 @@ public static class RomajiHelper
                     item.Surface,
                     false,
                     pos1,
-                    pos2);
+                    pos2,
+                    pos3);
             }
 
             if (unit != null)

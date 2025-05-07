@@ -83,6 +83,11 @@ public sealed partial class OutputPage : Page
                     // 앞 형태소가 접두사인 경우 공백 없이 바로 추가
                     result.Append(unit.Romaji);
                 }
+                else if (previous.Pos2 == "数詞" && (unit.Pos2 == "数詞" || unit.Pos3 == "助数詞可能"))
+                {
+                    // 앞 형태소가 수사이고 현재 형태소가 수사 또는 조수사 가능일 경우 공백 없이 바로 추가
+                    result.Append(unit.Romaji);
+                }
                 else
                 {
                     // 조사가 아닌 경우 공백 추가
@@ -190,7 +195,7 @@ public sealed partial class OutputPage : Page
             {
                 //output.AppendLine(GetString(item.Units.Select(p => p.Hiragana)));
                 output.AppendLine(GetStringWithParticles(item.Units.Select(p =>
-                new ConvertedUnit(p.Japanese, p.Hiragana, p.Hiragana, p.IsKanji, p.Pos1, p.Pos2))));
+                new ConvertedUnit(p.Japanese, p.Hiragana, p.Hiragana, p.IsKanji, p.Pos1, p.Pos2, p.Pos3))));
             }
 
             if (RomajiCheckBox.IsOn)
