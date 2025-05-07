@@ -10,13 +10,14 @@ public class ConvertedUnit : INotifyPropertyChanged
     private bool _isKanji;
     private string _pos1;
     private string _pos2;
+    private string _pos3;
     private string _japanese;
     private ObservableCollection<ReplaceString> _replaceHiragana;
     private ObservableCollection<ReplaceString> _replaceRomaji;
     private string _romaji;
     private ushort _selectId;
 
-    public ConvertedUnit(string japanese, string hiragana, string romaji, bool isKanji, string pos1, string pos2)
+    public ConvertedUnit(string japanese, string hiragana, string romaji, bool isKanji, string pos1, string pos2, string pos3)
     {
         Japanese = japanese;
         Romaji = romaji;
@@ -24,10 +25,11 @@ public class ConvertedUnit : INotifyPropertyChanged
         IsKanji = isKanji;
         Pos1 = pos1;
         Pos2 = pos2;
+        Pos3 = pos3;
         SelectId = 1;
         ReplaceHiragana = new ObservableCollection<ReplaceString> { new(1, hiragana, true) };
         ReplaceRomaji = new ObservableCollection<ReplaceString> { new(1, romaji, true) };
-
+        _pos3 = pos3;
     }
 
     public string Japanese
@@ -112,6 +114,16 @@ public class ConvertedUnit : INotifyPropertyChanged
         {
             if (value == _pos2) return;
             _pos2 = value;
+            OnPropertyChanged();
+        }
+    }
+    public string Pos3
+    {
+        get => _pos3;
+        set
+        {
+            if (value == _pos3) return;
+            _pos3 = value;
             OnPropertyChanged();
         }
     }

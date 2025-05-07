@@ -83,6 +83,11 @@ public sealed partial class OutputPage : Page
                     // 앞 형태소가 접두사인 경우 공백 없이 바로 추가
                     result.Append(unit.Romaji);
                 }
+                else if (previous.Pos2 == "数詞" && (unit.Pos2 == "数詞" || unit.Pos3 == "助数詞可能"))
+                {
+                    // 앞 형태소가 수사이고 현재 형태소가 수사 또는 조수사 가능일 경우 공백 없이 바로 추가
+                    result.Append(unit.Romaji);
+                }
                 else
                 {
                     // 그 이외 경우 공백 삽입
@@ -113,6 +118,13 @@ public sealed partial class OutputPage : Page
                     if (i > 0 && singleJamos.Contains(current))
                     {
                         char previous_char = resultString[i - 1];
+
+                        // 앞 글자가 공백인 경우 제거 후 처리
+                        if (previous_char == ' ' && i > 1)
+                        {
+                            previous_char = resultString[i - 2];
+                            finalResult.Length--;
+                        }
 
                         //장음 예외 처리
                         bool isHyphen = previous_char == '-';
@@ -190,7 +202,7 @@ public sealed partial class OutputPage : Page
             {
                 //output.AppendLine(GetString(item.Units.Select(p => p.Hiragana)));
                 output.AppendLine(GetStringWithParticles(item.Units.Select(p =>
-                new ConvertedUnit(p.Japanese, p.Hiragana, p.Hiragana, p.IsKanji, p.Pos1, p.Pos2))));
+                new ConvertedUnit(p.Japanese, p.Hiragana, p.Hiragana, p.IsKanji, p.Pos1, p.Pos2, p.Pos3))));
             }
 
             if (RomajiCheckBox.IsOn)

@@ -75,7 +75,7 @@ public static class RomajiHelper
             {
                 if (IsEnglish(sentence))
                 {
-                    multiUnits.Add(new[] { new ConvertedUnit(sentence, sentence, sentence, false, "", "") });
+                    multiUnits.Add(new[] { new ConvertedUnit(sentence, sentence, sentence, false, "", "", "") });
                     continue;
                 }
 
@@ -148,13 +148,15 @@ public static class RomajiHelper
             ConvertedUnit unit = null;
             string pos1 = item.GetPos1();
             string pos2 = item.GetPos2();
+            string pos3 = item.GetPos3();
             // 디버깅용 출력
-            Console.WriteLine($"Word: {item.Surface}, POS1: {item.GetPos1()}, POS2: {item.GetPos2()}, POS3: {item.GetPos3()}, POS4: {item.GetPos4()}, ");
+            //Console.WriteLine($"Word: {item.Surface}, POS1: {item.GetPos1()}, POS2: {item.GetPos2()}, POS3: {item.GetPos3()}, POS4: {item.GetPos4()}, ");
 
             if (item.CharType > 0)
             {
                 var features = CustomSplit(item.Feature);
-                Console.WriteLine($"features Length: {features.Length}, ");
+                Console.WriteLine($"features: {string.Join(", ", features)}, ");
+                //Console.WriteLine($"GetOrth: {item.GetOrth()}, GetOrthBase: {item.GetOrthBase()}, GetPron: {item.GetPron()}, GetPronBase: {item.GetPronBase()}");
                 if (TryCustomConvert(item.Surface, out var customResult))
                 {
                     //사용자 정의 사전 확인
@@ -163,9 +165,10 @@ public static class RomajiHelper
                         KanaHelper.KatakanaToRomaji(customResult),
                         true,
                         pos1,
-                        pos2);
+                        pos2,
+                        pos3);
                 }
-                else if (features.Length > 0 && item.GetPos1() != "助詞" && IsJapanese(item.Surface))
+                else if (features.Length > 0 && pos1 != "助詞" && IsJapanese(item.Surface))
                 {
                     //순수 가나확인
                     unit = new ConvertedUnit(item.Surface,
@@ -173,41 +176,55 @@ public static class RomajiHelper
                         KanaHelper.KatakanaToRomaji(item.Surface),
                         false,
                         pos1,
-                        pos2);
+                        pos2,
+                        pos3);
                 }
-                else if (IsEnglish(item.Surface))
+                else if (new[] { "補助記号" }.Contains(pos1))
                 {
-                    Console.WriteLine($"English");
-                    //영어
-                    unit = new ConvertedUnit(item.Surface,
-                        item.Surface,
-                        item.Surface,
-                        false,
-                        pos1,
-                        pos2);
-                }
-                else if (features.Length <= 6 || new[] { "補助記号" }.Contains(item.GetPos1()))
-                {
-                    Console.WriteLine($"Fail");
                     //구두점이나 인식 불가 문자 처리
                     unit = new ConvertedUnit(item.Surface,
                         item.Surface,
                         "",
                         false,
                         "助詞",//조사처럼 앞에 띄어쓰기 없도록
-                        pos2);
+                        pos2,
+                        pos3);
+                }
+                else if (IsEnglish(item.Surface) && pos2 != "数詞")
+                {
+                    //영어
+                    unit = new ConvertedUnit(item.Surface,
+                        item.Surface,
+                        item.Surface,
+                        false,
+                        pos1,
+                        pos2,
+                        pos3);
+                }
+                else if (features.Length <= 6)
+                {
+                    //구두점이나 인식 불가 문자 처리 2
+                    unit = new ConvertedUnit(item.Surface,
+                        item.Surface,
+                        "",
+                        false,
+                        "助詞",//조사처럼 앞에 띄어쓰기 없도록
+                        pos2,
+                        pos3);
                 }
                 else
                 {
                     //한자나 조사 처리
-                    var kana = GetKana(item);
+                    //var kana = GetKana(item);
+                    var pron = item.GetPron();
 
                     unit = new ConvertedUnit(item.Surface,
-                        KanaHelper.ToHiragana(kana),
-                        KanaHelper.KatakanaToRomaji(kana),
+                        KanaHelper.ToHiragana(pron),
+                        KanaHelper.KatakanaToRomaji(pron),
                         !IsJapanese(item.Surface),
                         pos1,
-                        pos2);
+                        pos2,
+                        pos3);
                     var (replaceHiragana, replaceRomaji) = GetReplaceData(item);
                     unit.ReplaceHiragana = replaceHiragana;
                     unit.ReplaceRomaji = replaceRomaji;
@@ -220,7 +237,8 @@ public static class RomajiHelper
                     item.Surface,
                     false,
                     pos1,
-                    pos2);
+                    pos2,
+                    pos3);
             }
 
             if (unit != null)
@@ -393,6 +411,7 @@ public static class RomajiHelper
     {
         return Regex.IsMatch(str, @"^[\u3040-\u30ff]+$", RegexOptions.Compiled);
     }
+
 
     #endregion
 }

@@ -73,15 +73,8 @@ public static class KanaHelper
             var word = str[i].ToString();
             if (KanaDictionary.ContainsKey(word))
             {
-                //장음 처리
-                if(i > 0 && (KanaDictionary[word] == "아" || KanaDictionary[word] == "이" || KanaDictionary[word] == "우" ||
-                    KanaDictionary[word] == "에" || KanaDictionary[word] == "오") 
-                    && result.Length > 0 && IsLongsound(result[result.Length - 1], KanaDictionary[word][0]))
-                {
-                    result.Append("-");
-                }
                 //일반적인 변환
-                else result.Append(KanaDictionary[word]);
+                    result.Append(KanaDictionary[word]);
             }
             else if (word == "ー")
             {
@@ -113,7 +106,7 @@ public static class KanaHelper
                 int unicodeIndex = result[i - 1] - 0xAC00;
                 int jungseong = (unicodeIndex / 28) % 21;
                 int choseong = unicodeIndex / (21 * 28);
-                int newChar = 0xAC00 + (choseong * 21 * 28) + (jungseong * 28) + 4;
+                int newChar = 0xAC00 + (choseong * 21 * 28) + (jungseong * 28) + 19;
                 result[i - 1] = (char)newChar;
 
                 result.Remove(i, 1); // 현재 'っ' 제거
@@ -141,49 +134,6 @@ public static class KanaHelper
         }
 
         return result.ToString();
-    }
-
-    //한글이 초성 중성만 있는지 확인하는 메서드
-    public static bool IsHangulWithoutBatchim(char ch)
-    {
-        // 한글 완성형 범위: U+AC00 ~ U+D7A3
-        if (ch < 0xAC00 || ch > 0xD7A3)
-            return false;
-
-        int unicodeIndex = ch - 0xAC00;
-        int jongseongIndex = unicodeIndex % 28;
-
-        // 종성 인덱스가 0이면 받침 없음
-        return jongseongIndex == 0;
-    }
-
-    //이전 한글 문자와 현재 한글 문자가 같은 중성을 가지면서 현재 한글 문자가 초성이 'ㅇ'인지 확인하는 메서드
-    public static bool IsLongsound(char prev, char current)
-    {
-        // 한글 완성형인지 확인
-        if (prev < 0xAC00 || prev > 0xD7A3 || current < 0xAC00 || current > 0xD7A3)
-            return false;
-
-        int prevIndex = prev - 0xAC00;
-        int currIndex = current - 0xAC00;
-
-        int prevJungseong = (prevIndex % (21 * 28)) / 28;
-        int currJungseong = (currIndex % (21 * 28)) / 28;
-        int currChoseong = currIndex / (21 * 28);
-
-        // 초성 'ㅇ' 인덱스는 11
-        bool isIeung = (currChoseong == 11);
-
-        // 예외 중성 쌍
-        bool isSpecialJungseongPair =
-            (prevJungseong == 8 && currJungseong == 13) || // ㅗ → ㅜ
-            (prevJungseong == 6 && currJungseong == 0) || // ㅑ → ㅏ
-            (prevJungseong == 7 && currJungseong == 4) || // ㅕ → ㅓ
-            (prevJungseong == 12 && currJungseong == 8) || // ㅛ → ㅗ
-            (prevJungseong == 12 && currJungseong == 13) || // ㅛ → ㅜ
-            (prevJungseong == 17 && currJungseong == 13);   // ㅠ → ㅜ
-
-        return isIeung && (prevJungseong == currJungseong || isSpecialJungseongPair);
     }
 
     public static Dictionary<string, string> KanaDictionary = new Dictionary<string, string>
