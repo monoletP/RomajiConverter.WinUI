@@ -85,7 +85,7 @@ public sealed partial class OutputPage : Page
                 }
                 else
                 {
-                    // 조사가 아닌 경우 공백 추가
+                    // 그 이외 경우 공백 삽입
                     result.Append(" ").Append(unit.Romaji);
                 }
 
