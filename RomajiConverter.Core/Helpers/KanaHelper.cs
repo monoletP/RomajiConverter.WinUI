@@ -113,7 +113,7 @@ public static class KanaHelper
                 int unicodeIndex = result[i - 1] - 0xAC00;
                 int jungseong = (unicodeIndex / 28) % 21;
                 int choseong = unicodeIndex / (21 * 28);
-                int newChar = 0xAC00 + (choseong * 21 * 28) + (jungseong * 28) + 4;
+                int newChar = 0xAC00 + (choseong * 21 * 28) + (jungseong * 28) + 19;
                 result[i - 1] = (char)newChar;
 
                 result.Remove(i, 1); // 현재 'っ' 제거
