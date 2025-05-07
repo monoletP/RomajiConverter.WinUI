@@ -68,9 +68,14 @@ public sealed partial class OutputPage : Page
                     // 조사 또는 조동사 또는 접미사인 경우 공백 없이 바로 추가
                     result.Append(unit.Romaji);
                 }
-                else if (unit.Pos1 == "動詞" && unit.Pos2 == " 非自立可能")
+                else if (unit.Pos2 == "非自立")
                 {
-                    //비자립가능 동사일 경우 공백 없이 바로 추가
+                    //비자립일 경우 공백 없이 바로 추가
+                    result.Append(unit.Romaji);
+                }
+                else if (previous.Pos1 != "助詞" && unit.Pos2 == "非自立可能")
+                {
+                    //앞 품사가 조사가 아니고 비자립가능일 경우 공백 없이 바로 추가
                     result.Append(unit.Romaji);
                 }
                 else if (previous.Pos1 == "接頭辞")
@@ -109,13 +114,19 @@ public sealed partial class OutputPage : Page
                     {
                         char previous_char = resultString[i - 1];
 
+                        //장음 예외 처리
+                        bool isHyphen = previous_char == '-';
+                        if (isHyphen && i > 1)
+                            previous_char = resultString[i - 2];
+
                         // 앞 글자가 한글 완성형인지 확인 (가-힣 범위: U+AC00-U+D7A3)
                         if (previous_char >= 0xAC00 && previous_char <= 0xD7A3)
                         {
                             // 한글 조합을 위한 계산
                             int unicodeValue = previous_char;
                             int baseCode = 0xAC00;
-                            int choseongIndex = (unicodeValue - baseCode) / (21 * 28);
+                            int choseongIndex = isHyphen ? 11 // 장음이면 초성 ㅇ으로
+                                : (unicodeValue - baseCode) / (21 * 28);
                             int jungseongIndex = ((unicodeValue - baseCode) % (21 * 28)) / 28;
                             int jongseongIndex = 0;
 
