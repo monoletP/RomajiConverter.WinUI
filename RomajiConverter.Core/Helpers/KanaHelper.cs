@@ -73,15 +73,8 @@ public static class KanaHelper
             var word = str[i].ToString();
             if (KanaDictionary.ContainsKey(word))
             {
-                //장음 처리
-                if(i > 0 && (KanaDictionary[word] == "아" || KanaDictionary[word] == "이" || KanaDictionary[word] == "우" ||
-                    KanaDictionary[word] == "에" || KanaDictionary[word] == "오") 
-                    && result.Length > 0 && IsLongsound(result[result.Length - 1], KanaDictionary[word][0]))
-                {
-                    result.Append("-");
-                }
                 //일반적인 변환
-                else result.Append(KanaDictionary[word]);
+                    result.Append(KanaDictionary[word]);
             }
             else if (word == "ー")
             {
