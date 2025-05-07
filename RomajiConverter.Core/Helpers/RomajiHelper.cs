@@ -178,6 +178,18 @@ public static class RomajiHelper
                         pos2,
                         pos3);
                 }
+                else if (new[] { "補助記号" }.Contains(item.GetPos1()))
+                {
+                    Console.WriteLine($"Fail");
+                    //구두점이나 인식 불가 문자 처리
+                    unit = new ConvertedUnit(item.Surface,
+                        item.Surface,
+                        "",
+                        false,
+                        "助詞",//조사처럼 앞에 띄어쓰기 없도록
+                        pos2,
+                        pos3);
+                }
                 else if (IsEnglish(item.Surface))
                 {
                     Console.WriteLine($"English");
@@ -190,10 +202,10 @@ public static class RomajiHelper
                         pos2,
                         pos3);
                 }
-                else if (features.Length <= 6 || new[] { "補助記号" }.Contains(item.GetPos1()))
+                else if (features.Length <= 6)
                 {
                     Console.WriteLine($"Fail");
-                    //구두점이나 인식 불가 문자 처리
+                    //구두점이나 인식 불가 문자 처리 2
                     unit = new ConvertedUnit(item.Surface,
                         item.Surface,
                         "",
