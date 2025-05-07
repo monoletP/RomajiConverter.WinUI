@@ -119,6 +119,13 @@ public sealed partial class OutputPage : Page
                     {
                         char previous_char = resultString[i - 1];
 
+                        // 앞 글자가 공백인 경우 제거 후 처리
+                        if (previous_char == ' ' && i > 1)
+                        {
+                            previous_char = resultString[i - 2];
+                            finalResult.Length--;
+                        }
+
                         //장음 예외 처리
                         bool isHyphen = previous_char == '-';
                         if (isHyphen && i > 1)
