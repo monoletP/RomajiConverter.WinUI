@@ -9,19 +9,28 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
     <StackPanel>
-        <local:EditableLabel x:Name="RomajiLabel"
-                             SelectedText="{x:Bind SelectedRomaji,Mode=TwoWay}"
+        <local:EditableLabel x:Name="RomajiPronLabel"
+                             SelectedText="{x:Bind SelectedRomajiPron,Mode=TwoWay}"
                              MyFontSize="{x:Bind MyFontSize,Mode=OneWay}"
-                             ReplaceText="{x:Bind Unit.ReplaceRomaji,Mode=OneWay}"
+                             ReplaceText="{x:Bind Unit.ReplaceRomajiPron,Mode=OneWay}"
                              BorderVisibilitySetting="{x:Bind BorderVisibilitySetting,Mode=OneWay}">
             <local:EditableLabel.OpacityTransition>
                 <ScalarTransition />
             </local:EditableLabel.OpacityTransition>
         </local:EditableLabel>
+        <local:EditableLabel x:Name="RomajiKanaLabel"
+                     SelectedText="{x:Bind SelectedRomajiKana,Mode=TwoWay}"
+                     MyFontSize="{x:Bind MyFontSize,Mode=OneWay}"
+                     ReplaceText="{x:Bind Unit.ReplaceRomajiKana,Mode=OneWay}"
+                     BorderVisibilitySetting="{x:Bind BorderVisibilitySetting,Mode=OneWay}">
+            <local:EditableLabel.OpacityTransition>
+                <ScalarTransition />
+            </local:EditableLabel.OpacityTransition>
+        </local:EditableLabel>
         <local:EditableLabel x:Name="HiraganaLabel"
-                             SelectedText="{x:Bind SelectedHiragana,Mode=TwoWay}"
+                             SelectedText="{x:Bind SelectedHiraganaPron,Mode=TwoWay}"
                              MyFontSize="{x:Bind MyFontSize,Mode=OneWay}"
-                             ReplaceText="{x:Bind Unit.ReplaceHiragana,Mode=OneWay}"
+                             ReplaceText="{x:Bind Unit.ReplaceHiraganaPron,Mode=OneWay}"
                              BorderVisibilitySetting="{x:Bind BorderVisibilitySetting,Mode=OneWay}">
             <local:EditableLabel.OpacityTransition>
                 <ScalarTransition />

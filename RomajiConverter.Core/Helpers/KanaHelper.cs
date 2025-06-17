@@ -136,7 +136,7 @@ public static class KanaHelper
         return result.ToString();
     }
 
-    public static string ConvertLongSound(string str)
+    public static string ConvertLongSound2Hyphen(string str)
     {
         var result = new StringBuilder();
         result.Append(str[0]); // 첫 번째 문자 추가
@@ -197,6 +197,32 @@ public static class KanaHelper
             (prevJungseong == 17 && currJungseong == 13);   // ㅠ → ㅜ
 
         return isIeung && (prevJungseong == currJungseong || isSpecialJungseongPair);
+    }
+
+    //이전 한글 문자와 중성이 같으면서 초성이 'ㅇ'인 글자를 반환
+    public static string GetLongSoundStr(char prev)
+    {
+        int prevIndex = prev - 0xAC00;
+
+        int prevJungseong = (prevIndex % (21 * 28)) / 28;
+        // 초성 'ㅇ' 인덱스는 11
+        int retChoseong = 11;
+
+        return ((char)(0xAC00 + (retChoseong * 21 * 28) + (prevJungseong * 28))).ToString();
+
+    }
+
+    public static string ConvertHyphen2LongSound(string str)
+    {
+        var result = new StringBuilder();
+        for (var i = 0; i < str.Length; i++)
+        {
+            if (str[i] == '-')
+                result.Append(GetLongSoundStr(str[i - 1]));
+            else
+                result.Append(str[i]);
+        }
+        return result.ToString();
     }
 
     public static Dictionary<string, string> KanaDictionary = new Dictionary<string, string>

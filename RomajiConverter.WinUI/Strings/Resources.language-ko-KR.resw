@@ -189,6 +189,12 @@
   <data name="EditRomajiCheckBox.MinWidth" xml:space="preserve">
     <value>120</value>
   </data>
+  <data name="EditRomajiKanaCheckBox.Header" xml:space="preserve">
+    <value>한글가나</value>
+  </data>
+  <data name="EditRomajiPronCheckBox.Header" xml:space="preserve">
+    <value>한글발음</value>
+  </data>
   <data name="Exception" xml:space="preserve">
     <value>예외</value>
   </data>
@@ -323,6 +329,12 @@
   </data>
   <data name="RomajiCheckBox.MinWidth" xml:space="preserve">
     <value>120</value>
+  </data>
+  <data name="RomajiKanaCheckBox.Header" xml:space="preserve">
+    <value>한글가나</value>
+  </data>
+  <data name="RomajiPronCheckBox.Header" xml:space="preserve">
+    <value>한글발음</value>
   </data>
   <data name="SaveButton.Label" xml:space="preserve">
     <value>저장</value>

@@ -6,29 +6,37 @@ namespace RomajiConverter.Core.Models;
 
 public class ConvertedUnit : INotifyPropertyChanged
 {
-    private string _hiragana;
+    private string _hiraganaPron;
+    private string _hiraganaKana;
     private bool _isKanji;
     private string _pos1;
     private string _pos2;
     private string _pos3;
     private string _japanese;
-    private ObservableCollection<ReplaceString> _replaceHiragana;
-    private ObservableCollection<ReplaceString> _replaceRomaji;
-    private string _romaji;
+    private ObservableCollection<ReplaceString> _replaceHiraganaPron;
+    private ObservableCollection<ReplaceString> _replaceHiraganaKana;
+    private ObservableCollection<ReplaceString> _replaceRomajiPron;
+    private ObservableCollection<ReplaceString> _replaceRomajiKana;
+    private string _romajiPron;
+    private string _romajiKana;
     private ushort _selectId;
 
-    public ConvertedUnit(string japanese, string hiragana, string romaji, bool isKanji, string pos1, string pos2, string pos3)
+    public ConvertedUnit(string japanese, string hiraganaPron, string hiraganaKana, string romajiPron, string romajiKana, bool isKanji, string pos1, string pos2, string pos3)
     {
         Japanese = japanese;
-        Romaji = romaji;
-        Hiragana = hiragana;
+        RomajiPron = romajiPron;
+        HiraganaPron = hiraganaPron;
+        RomajiKana = romajiKana;
+        HiraganaKana = hiraganaKana;
         IsKanji = isKanji;
         Pos1 = pos1;
         Pos2 = pos2;
         Pos3 = pos3;
         SelectId = 1;
-        ReplaceHiragana = new ObservableCollection<ReplaceString> { new(1, hiragana, true) };
-        ReplaceRomaji = new ObservableCollection<ReplaceString> { new(1, romaji, true) };
+        ReplaceHiraganaPron = new ObservableCollection<ReplaceString> { new(1, hiraganaPron, true) };
+        ReplaceRomajiPron = new ObservableCollection<ReplaceString> { new(1, romajiPron, true) };
+        ReplaceHiraganaKana = new ObservableCollection<ReplaceString> { new(1, hiraganaKana, true) };
+        ReplaceRomajiKana = new ObservableCollection<ReplaceString> { new(1, romajiKana, true) };
         _pos3 = pos3;
     }
 
@@ -43,46 +51,90 @@ public class ConvertedUnit : INotifyPropertyChanged
         }
     }
 
-    public string Romaji
+    public string RomajiPron
     {
-        get => _romaji;
+        get => _romajiPron;
         set
         {
-            if (value == _romaji) return;
-            _romaji = value;
+            if (value == _romajiPron) return;
+            _romajiPron = value;
             OnPropertyChanged();
         }
     }
 
-    public ObservableCollection<ReplaceString> ReplaceRomaji
+    public string RomajiKana
     {
-        get => _replaceRomaji;
+        get => _romajiKana;
         set
         {
-            if (Equals(value, _replaceRomaji)) return;
-            _replaceRomaji = value;
+            if (value == _romajiKana) return;
+            _romajiKana = value;
             OnPropertyChanged();
         }
     }
 
-    public string Hiragana
+    public ObservableCollection<ReplaceString> ReplaceRomajiPron
     {
-        get => _hiragana;
+        get => _replaceRomajiPron;
         set
         {
-            if (value == _hiragana) return;
-            _hiragana = value;
+            if (Equals(value, _replaceRomajiPron)) return;
+            _replaceRomajiPron = value;
             OnPropertyChanged();
         }
     }
 
-    public ObservableCollection<ReplaceString> ReplaceHiragana
+    public ObservableCollection<ReplaceString> ReplaceRomajiKana
     {
-        get => _replaceHiragana;
+        get => _replaceRomajiKana;
         set
         {
-            if (Equals(value, _replaceHiragana)) return;
-            _replaceHiragana = value;
+            if (Equals(value, _replaceRomajiKana)) return;
+            _replaceRomajiKana = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public string HiraganaPron
+    {
+        get => _hiraganaPron;
+        set
+        {
+            if (value == _hiraganaPron) return;
+            _hiraganaPron = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public string HiraganaKana
+    {
+        get => _hiraganaKana;
+        set
+        {
+            if (value == _hiraganaKana) return;
+            _hiraganaKana = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public ObservableCollection<ReplaceString> ReplaceHiraganaPron
+    {
+        get => _replaceHiraganaPron;
+        set
+        {
+            if (Equals(value, _replaceHiraganaPron)) return;
+            _replaceHiraganaPron = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public ObservableCollection<ReplaceString> ReplaceHiraganaKana
+    {
+        get => _replaceHiraganaKana;
+        set
+        {
+            if (Equals(value, _replaceHiraganaKana)) return;
+            _replaceHiraganaKana = value;
             OnPropertyChanged();
         }
     }

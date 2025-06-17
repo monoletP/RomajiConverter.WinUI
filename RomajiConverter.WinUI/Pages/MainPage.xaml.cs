@@ -169,14 +169,16 @@ public sealed partial class MainPage : Page
                 foreach (var unit in line.Units)
                 {
                     var renderUnit = new List<string>();
-                    if (MainEditPage.ToggleSwitchState.Romaji)
-                        renderUnit.Add(unit.Romaji);
+                    if (MainEditPage.ToggleSwitchState.RomajiPron)
+                        renderUnit.Add(unit.RomajiPron);
+                    if (MainEditPage.ToggleSwitchState.RomajiKana)
+                        renderUnit.Add(unit.RomajiKana);
                     if (MainEditPage.ToggleSwitchState.Hiragana)
                     {
                         if (MainEditPage.ToggleSwitchState.IsOnlyShowKanji)
-                            renderUnit.Add(unit.IsKanji ? unit.Hiragana : " ");
+                            renderUnit.Add(unit.IsKanji ? unit.HiraganaPron : " ");
                         else
-                            renderUnit.Add(unit.Hiragana);
+                            renderUnit.Add(unit.HiraganaPron);
                     }
 
                     renderUnit.Add(unit.Japanese);

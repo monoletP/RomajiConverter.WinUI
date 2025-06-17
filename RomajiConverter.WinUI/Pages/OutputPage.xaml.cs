@@ -22,7 +22,8 @@ public sealed partial class OutputPage : Page
 
         SpaceCheckBox.Toggled += ThirdCheckBox_OnToggled;
         NewLineCheckBox.Toggled += ThirdCheckBox_OnToggled;
-        RomajiCheckBox.Toggled += ThirdCheckBox_OnToggled;
+        RomajiPronCheckBox.Toggled += ThirdCheckBox_OnToggled;
+        RomajiKanaCheckBox.Toggled += ThirdCheckBox_OnToggled;
         HiraganaCheckBox.Toggled += ThirdCheckBox_OnToggled;
         JPCheckBox.Toggled += ThirdCheckBox_OnToggled;
         KanjiHiraganaCheckBox.Toggled += ThirdCheckBox_OnToggled;
@@ -48,10 +49,10 @@ public sealed partial class OutputPage : Page
         {
             return string.Join(SpaceCheckBox.IsOn ? " " : "", array);
         }*/
-        string GetStringWithParticles(IEnumerable<ConvertedUnit> units)
+        string GetStringWithParticles(IEnumerable<ConvertedUnit> units, bool isPron)
         {
             if (!SpaceCheckBox.IsOn)
-                return string.Join("", units.Select(p => p.Romaji));
+                return string.Join("", units.Select(p => (isPron) ? p.RomajiPron : p.RomajiKana));
 
             // 공백 처리가 활성화된 경우 조사를 앞 단어와 붙임
             var result = new StringBuilder();
@@ -59,39 +60,40 @@ public sealed partial class OutputPage : Page
 
             foreach (var unit in units)
             {
+                string unitRomaji = (isPron) ? unit.RomajiPron : unit.RomajiKana;
                 if (previous == null)
                 {
-                    result.Append(unit.Romaji);
+                    result.Append(unitRomaji);
                 }
                 else if (unit.Pos1 == "助詞" || unit.Pos1 == "助動詞" || unit.Pos1 == "接尾辞")
                 {
                     // 조사 또는 조동사 또는 접미사인 경우 공백 없이 바로 추가
-                    result.Append(unit.Romaji);
+                    result.Append(unitRomaji);
                 }
                 else if (unit.Pos2 == "非自立")
                 {
                     //비자립일 경우 공백 없이 바로 추가
-                    result.Append(unit.Romaji);
+                    result.Append(unitRomaji);
                 }
                 else if (previous.Pos1 != "助詞" && unit.Pos2 == "非自立可能")
                 {
                     //앞 품사가 조사가 아니고 비자립가능일 경우 공백 없이 바로 추가
-                    result.Append(unit.Romaji);
+                    result.Append(unitRomaji);
                 }
                 else if (previous.Pos1 == "接頭辞")
                 {
                     // 앞 형태소가 접두사인 경우 공백 없이 바로 추가
-                    result.Append(unit.Romaji);
+                    result.Append(unitRomaji);
                 }
                 else if (previous.Pos2 == "数詞" && (unit.Pos2 == "数詞" || unit.Pos3 == "助数詞可能"))
                 {
                     // 앞 형태소가 수사이고 현재 형태소가 수사 또는 조수사 가능일 경우 공백 없이 바로 추가
-                    result.Append(unit.Romaji);
+                    result.Append(unitRomaji);
                 }
                 else
                 {
                     // 그 이외 경우 공백 삽입
-                    result.Append(" ").Append(unit.Romaji);
+                    result.Append(" ").Append(unitRomaji);
                 }
 
                 previous = unit;
@@ -186,7 +188,7 @@ public sealed partial class OutputPage : Page
                         var kanjiIndex = japanese.IndexOf(kanjiUnit.Japanese, replacedIndex);
                         var hiraganaIndex = kanjiIndex + kanjiUnit.Japanese.Length;
                         japanese = japanese.Insert(hiraganaIndex,
-                            $"{leftParenthesis}{kanjiUnit.Hiragana}{rightParenthesis}");
+                            $"{leftParenthesis}{kanjiUnit.HiraganaPron}{rightParenthesis}");
                         replacedIndex = hiraganaIndex;
                     }
 
@@ -202,13 +204,19 @@ public sealed partial class OutputPage : Page
             {
                 //output.AppendLine(GetString(item.Units.Select(p => p.Hiragana)));
                 output.AppendLine(GetStringWithParticles(item.Units.Select(p =>
-                new ConvertedUnit(p.Japanese, p.Hiragana, p.Hiragana, p.IsKanji, p.Pos1, p.Pos2, p.Pos3))));
+                new ConvertedUnit(p.Japanese, p.HiraganaPron, p.HiraganaPron, p.HiraganaKana, p.HiraganaKana, p.IsKanji, p.Pos1, p.Pos2, p.Pos3)), true));
             }
 
-            if (RomajiCheckBox.IsOn)
+            if (RomajiPronCheckBox.IsOn)
             {
                 //output.AppendLine(GetString(item.Units.Select(p => p.Romaji)));
-                output.AppendLine(GetStringWithParticles(item.Units));
+                output.AppendLine(GetStringWithParticles(item.Units, true));
+            }
+
+            if (RomajiKanaCheckBox.IsOn)
+            {
+                //output.AppendLine(GetString(item.Units.Select(p => p.Romaji)));
+                output.AppendLine(GetStringWithParticles(item.Units, false));
             }
 
             if (CHCheckBox.IsOn && !string.IsNullOrWhiteSpace(item.Chinese))

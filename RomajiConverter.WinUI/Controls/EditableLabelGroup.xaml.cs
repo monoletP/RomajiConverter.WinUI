@@ -14,8 +14,12 @@ public sealed partial class EditableLabelGroup : UserControl, INotifyPropertyCha
         typeof(ConvertedUnit),
         typeof(EditableLabelGroup), new PropertyMetadata(null));
 
-    public static readonly DependencyProperty RomajiVisibilityProperty = DependencyProperty.Register(
-        nameof(RomajiVisibility),
+    public static readonly DependencyProperty RomajiPronVisibilityProperty = DependencyProperty.Register(
+        nameof(RomajiPronVisibility),
+        typeof(Visibility), typeof(EditableLabelGroup), new PropertyMetadata(Visibility.Collapsed));
+
+    public static readonly DependencyProperty RomajiKanaVisibilityProperty = DependencyProperty.Register(
+        nameof(RomajiKanaVisibility),
         typeof(Visibility), typeof(EditableLabelGroup), new PropertyMetadata(Visibility.Collapsed));
 
     public static readonly DependencyProperty HiraganaVisibilityProperty =
@@ -32,15 +36,18 @@ public sealed partial class EditableLabelGroup : UserControl, INotifyPropertyCha
 
     private ReplaceString _selectedHiragana;
 
-    private ReplaceString _selectedRomaji;
+    private ReplaceString _selectedRomajiPron;
+    private ReplaceString _selectedRomajiKana;
 
     public EditableLabelGroup(ConvertedUnit unit)
     {
         InitializeComponent();
         Unit = unit;
         MyFontSize = 14;
-        SelectedRomaji = Unit.ReplaceRomaji.FirstOrDefault(p => p.Id == unit.SelectId) ?? Unit.ReplaceRomaji[0];
-        SelectedHiragana = Unit.ReplaceHiragana.FirstOrDefault(p => p.Id == unit.SelectId) ?? Unit.ReplaceHiragana[0];
+        SelectedRomajiPron = Unit.ReplaceRomajiPron.FirstOrDefault(p => p.Id == unit.SelectId) ?? Unit.ReplaceRomajiPron[0];
+        SelectedRomajiKana = Unit.ReplaceRomajiKana.FirstOrDefault(p => p.Id == unit.SelectId) ?? Unit.ReplaceRomajiKana[0];
+        SelectedHiraganaPron = Unit.ReplaceHiraganaPron.FirstOrDefault(p => p.Id == unit.SelectId) ?? Unit.ReplaceHiraganaPron[0];
+        SelectedHiraganaKana = Unit.ReplaceHiraganaKana.FirstOrDefault(p => p.Id == unit.SelectId) ?? Unit.ReplaceHiraganaKana[0];
         BorderVisibilitySetting = BorderVisibilitySetting.Highlight;
     }
 
@@ -50,26 +57,48 @@ public sealed partial class EditableLabelGroup : UserControl, INotifyPropertyCha
         set => SetValue(UnitProperty, value);
     }
 
-    public Visibility RomajiVisibility
+    public Visibility RomajiPronVisibility
     {
-        get => (Visibility)GetValue(RomajiVisibilityProperty);
+        get => (Visibility)GetValue(RomajiPronVisibilityProperty);
         set
         {
             switch (value)
             {
                 case Visibility.Visible:
-                    RomajiLabel.IsEnabled = true;
-                    RomajiLabel.Opacity = 1;
-                    RomajiLabel.Visibility = Visibility.Visible;
+                    RomajiPronLabel.IsEnabled = true;
+                    RomajiPronLabel.Opacity = 1;
+                    RomajiPronLabel.Visibility = Visibility.Visible;
                     break;
                 case Visibility.Collapsed:
-                    RomajiLabel.IsEnabled = false;
-                    RomajiLabel.Opacity = 0;
-                    RomajiLabel.Visibility = Visibility.Collapsed;
+                    RomajiPronLabel.IsEnabled = false;
+                    RomajiPronLabel.Opacity = 0;
+                    RomajiPronLabel.Visibility = Visibility.Collapsed;
                     break;
             }
 
-            SetValue(RomajiVisibilityProperty, value);
+            SetValue(RomajiPronVisibilityProperty, value);
+        }
+    }
+
+    public Visibility RomajiKanaVisibility
+    {
+        get => (Visibility)GetValue(RomajiKanaVisibilityProperty);
+        set
+        {
+            switch (value)
+            {
+                case Visibility.Visible:
+                    RomajiKanaLabel.IsEnabled = true;
+                    RomajiKanaLabel.Opacity = 1;
+                    RomajiKanaLabel.Visibility = Visibility.Visible;
+                    break;
+                case Visibility.Collapsed:
+                    RomajiKanaLabel.IsEnabled = false;
+                    RomajiKanaLabel.Opacity = 0;
+                    RomajiKanaLabel.Visibility = Visibility.Collapsed;
+                    break;
+            }
+            SetValue(RomajiKanaVisibilityProperty, value);
         }
     }
 
@@ -113,31 +142,61 @@ public sealed partial class EditableLabelGroup : UserControl, INotifyPropertyCha
         set => SetValue(BorderVisibilitySettingProperty, value);
     }
 
-    public ReplaceString SelectedRomaji
+    public ReplaceString SelectedRomajiPron
     {
-        get => _selectedRomaji;
+        get => _selectedRomajiPron;
         set
         {
-            if (Equals(value, _selectedRomaji)) return;
-            _selectedRomaji = value;
-            if ((_selectedRomaji?.IsSystem ?? true) && (SelectedHiragana?.IsSystem ?? true))
-                SelectedHiragana = Unit.ReplaceHiragana.FirstOrDefault(p => p.Id == _selectedRomaji?.Id);
-            Unit.Romaji = _selectedRomaji?.Value ?? string.Empty;
-            Unit.SelectId = _selectedRomaji?.Id ?? 1;
+            if (Equals(value, _selectedRomajiPron)) return;
+            _selectedRomajiPron = value;
+            if ((_selectedRomajiPron?.IsSystem ?? true) && (SelectedHiraganaPron?.IsSystem ?? true))
+                SelectedHiraganaPron = Unit.ReplaceHiraganaPron.FirstOrDefault(p => p.Id == _selectedRomajiPron?.Id);
+            Unit.RomajiPron = _selectedRomajiPron?.Value ?? string.Empty;
+            Unit.SelectId = _selectedRomajiPron?.Id ?? 1;
             OnPropertyChanged();
         }
     }
 
-    public ReplaceString SelectedHiragana
+    public ReplaceString SelectedRomajiKana
+    {
+        get => _selectedRomajiKana;
+        set
+        {
+            if (Equals(value, _selectedRomajiKana)) return;
+            _selectedRomajiKana = value;
+            if ((_selectedRomajiKana?.IsSystem ?? true) && (SelectedHiraganaKana?.IsSystem ?? true))
+                SelectedHiraganaKana = Unit.ReplaceHiraganaKana.FirstOrDefault(p => p.Id == _selectedRomajiKana?.Id);
+            Unit.RomajiKana = _selectedRomajiKana?.Value ?? string.Empty;
+            Unit.SelectId = _selectedRomajiKana?.Id ?? 1;
+            OnPropertyChanged();
+        }
+    }
+
+    public ReplaceString SelectedHiraganaPron
     {
         get => _selectedHiragana;
         set
         {
             if (Equals(value, _selectedHiragana)) return;
             _selectedHiragana = value;
-            if ((_selectedHiragana?.IsSystem ?? true) && (SelectedRomaji?.IsSystem ?? true))
-                SelectedRomaji = Unit.ReplaceRomaji.FirstOrDefault(p => p.Id == _selectedHiragana?.Id);
-            Unit.Hiragana = _selectedHiragana?.Value ?? string.Empty;
+            if ((_selectedHiragana?.IsSystem ?? true) && (SelectedRomajiPron?.IsSystem ?? true))
+                SelectedRomajiPron = Unit.ReplaceRomajiPron.FirstOrDefault(p => p.Id == _selectedHiragana?.Id);
+            Unit.HiraganaPron = _selectedHiragana?.Value ?? string.Empty;
+            Unit.SelectId = _selectedHiragana?.Id ?? 1;
+            OnPropertyChanged();
+        }
+    }
+    
+    public ReplaceString SelectedHiraganaKana
+    {
+        get => _selectedHiragana;
+        set
+        {
+            if (Equals(value, _selectedHiragana)) return;
+            _selectedHiragana = value;
+            if ((_selectedHiragana?.IsSystem ?? true) && (SelectedRomajiKana?.IsSystem ?? true))
+                SelectedRomajiKana = Unit.ReplaceRomajiKana.FirstOrDefault(p => p.Id == _selectedHiragana?.Id);
+            Unit.HiraganaKana = _selectedHiragana?.Value ?? string.Empty;
             Unit.SelectId = _selectedHiragana?.Id ?? 1;
             OnPropertyChanged();
         }
@@ -152,11 +211,13 @@ public sealed partial class EditableLabelGroup : UserControl, INotifyPropertyCha
 
     public void Destroy()
     {
-        RomajiLabel.Destroy();
+        RomajiPronLabel.Destroy();
+        RomajiKanaLabel.Destroy();
         HiraganaLabel.Destroy();
         Bindings.StopTracking();
         ClearValue(UnitProperty);
-        ClearValue(RomajiVisibilityProperty);
+        ClearValue(RomajiPronVisibilityProperty);
+        ClearValue(RomajiKanaVisibilityProperty);
         ClearValue(HiraganaVisibilityProperty);
         ClearValue(MyFontSizeProperty);
     }

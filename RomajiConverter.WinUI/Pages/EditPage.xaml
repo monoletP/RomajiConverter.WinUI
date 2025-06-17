@@ -30,8 +30,10 @@
                   HorizontalContentAlignment="Left" Padding="16,16,16,8" Header="显示选项">
             <StackPanel>
                 <controls1:WrapPanel>
-                    <ToggleSwitch x:Uid="EditRomajiCheckBox" x:Name="EditRomajiCheckBox" MinWidth="100"
-                                  Header="罗马音" IsOn="True" />
+                    <ToggleSwitch x:Uid="EditRomajiPronCheckBox" x:Name="EditRomajiPronCheckBox" MinWidth="100"
+                                  Header="Pron" IsOn="True" />
+                    <ToggleSwitch x:Uid="EditRomajiKanaCheckBox" x:Name="EditRomajiKanaCheckBox" MinWidth="100"
+              Header="Kana" />
                     <ToggleSwitch x:Uid="EditHiraganaCheckBox" x:Name="EditHiraganaCheckBox" MinWidth="100"
                                   Header="平假名" IsOn="False" />
                     <ToggleSwitch x:Uid="IsOnlyShowKanjiCheckBox" x:Name="IsOnlyShowKanjiCheckBox" MinWidth="100"

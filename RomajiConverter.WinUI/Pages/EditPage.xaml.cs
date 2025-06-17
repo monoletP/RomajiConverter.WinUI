@@ -40,7 +40,8 @@ public sealed partial class EditPage : Page
     {
         InitializeComponent();
 
-        EditRomajiCheckBox.Toggled += EditToggleSwitch_OnToggled;
+        EditRomajiPronCheckBox.Toggled += EditToggleSwitch_OnToggled;
+        EditRomajiKanaCheckBox.Toggled += EditToggleSwitch_OnToggled;
         EditHiraganaCheckBox.Toggled += EditToggleSwitch_OnToggled;
         IsOnlyShowKanjiCheckBox.Toggled += EditToggleSwitch_OnToggled;
         BorderVisibilityComboBox.SelectionChanged += BorderVisibilityComboBox_OnSelectionChanged;
@@ -57,8 +58,8 @@ public sealed partial class EditPage : Page
     /// <summary>
     /// ToggleSwitch控件状态
     /// </summary>
-    public (bool Romaji, bool Hiragana, bool IsOnlyShowKanji) ToggleSwitchState => (EditRomajiCheckBox.IsOn,
-        EditHiraganaCheckBox.IsOn, IsOnlyShowKanjiCheckBox.IsOn);
+    public (bool RomajiPron, bool RomajiKana, bool Hiragana, bool IsOnlyShowKanji) ToggleSwitchState => (EditRomajiPronCheckBox.IsOn,
+        EditRomajiKanaCheckBox.IsOn, EditHiraganaCheckBox.IsOn, IsOnlyShowKanjiCheckBox.IsOn);
 
     /// <summary>
     /// 渲染编辑面板
@@ -96,7 +97,8 @@ public sealed partial class EditPage : Page
             {
                 var group = new EditableLabelGroup(unit)
                 {
-                    RomajiVisibility = EditRomajiCheckBox.IsOn ? Visibility.Visible : Visibility.Collapsed,
+                    RomajiPronVisibility = EditRomajiPronCheckBox.IsOn ? Visibility.Visible : Visibility.Collapsed,
+                    RomajiKanaVisibility = EditRomajiKanaCheckBox.IsOn ? Visibility.Visible : Visibility.Collapsed,
                     BorderVisibilitySetting = (BorderVisibilitySetting)BorderVisibilityComboBox.SelectedIndex
                 };
                 group.SetBinding(EditableLabelGroup.MyFontSizeProperty, FontSizeBinding);
@@ -153,9 +155,13 @@ public sealed partial class EditPage : Page
             foreach (EditableLabelGroup editableLabelGroup in wrapPanel.Children)
                 switch (senderName)
                 {
-                    case "EditRomajiCheckBox":
-                        editableLabelGroup.RomajiVisibility =
-                            EditRomajiCheckBox.IsOn ? Visibility.Visible : Visibility.Collapsed;
+                    case "EditRomajiPronCheckBox":
+                        editableLabelGroup.RomajiPronVisibility =
+                            EditRomajiPronCheckBox.IsOn ? Visibility.Visible : Visibility.Collapsed;
+                        break;
+                    case "EditRomajiKanaCheckBox":
+                        editableLabelGroup.RomajiKanaVisibility =
+                            EditRomajiKanaCheckBox.IsOn ? Visibility.Visible : Visibility.Collapsed;
                         break;
                     case "EditHiraganaCheckBox":
                         if (EditHiraganaCheckBox.IsOn)
