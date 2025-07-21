@@ -14,17 +14,17 @@ public sealed partial class EditableLabelGroup : UserControl, INotifyPropertyCha
         typeof(ConvertedUnit),
         typeof(EditableLabelGroup), new PropertyMetadata(null));
 
-    public static readonly DependencyProperty RomajiPronVisibilityProperty = DependencyProperty.Register(
-        nameof(RomajiPronVisibility),
+    public static readonly DependencyProperty RomajiVisibilityProperty = DependencyProperty.Register(
+        nameof(RomajiVisibility),
         typeof(Visibility), typeof(EditableLabelGroup), new PropertyMetadata(Visibility.Collapsed));
 
-    public static readonly DependencyProperty RomajiKanaVisibilityProperty = DependencyProperty.Register(
-        nameof(RomajiKanaVisibility),
+    public static readonly DependencyProperty HiraganaVisibilityProperty = DependencyProperty.Register(
+        nameof(HiraganaVisibility),
         typeof(Visibility), typeof(EditableLabelGroup), new PropertyMetadata(Visibility.Collapsed));
 
-    public static readonly DependencyProperty HiraganaVisibilityProperty =
-        DependencyProperty.Register(nameof(HiraganaVisibility), typeof(HiraganaVisibility), typeof(EditableLabelGroup),
-            new PropertyMetadata(HiraganaVisibility.Collapsed));
+    public static readonly DependencyProperty IsHyphenProperty = DependencyProperty.Register(
+        nameof(IsHyphen),
+        typeof(bool), typeof(EditableLabelGroup), new PropertyMetadata(false, OnIsHyphenChanged));
 
     public static readonly DependencyProperty MyFontSizeProperty = DependencyProperty.Register(nameof(MyFontSize),
         typeof(double), typeof(EditableLabelGroup), new PropertyMetadata(14d));
@@ -34,8 +34,8 @@ public sealed partial class EditableLabelGroup : UserControl, INotifyPropertyCha
             typeof(EditableLabelGroup),
             new PropertyMetadata(BorderVisibilitySetting.Hidden));
 
-    private ReplaceString _selectedHiragana;
-
+    private ReplaceString _selectedHiraganaPron;
+    private ReplaceString _selectedHiraganaKana;
     private ReplaceString _selectedRomajiPron;
     private ReplaceString _selectedRomajiKana;
 
@@ -49,6 +49,8 @@ public sealed partial class EditableLabelGroup : UserControl, INotifyPropertyCha
         SelectedHiraganaPron = Unit.ReplaceHiraganaPron.FirstOrDefault(p => p.Id == unit.SelectId) ?? Unit.ReplaceHiraganaPron[0];
         SelectedHiraganaKana = Unit.ReplaceHiraganaKana.FirstOrDefault(p => p.Id == unit.SelectId) ?? Unit.ReplaceHiraganaKana[0];
         BorderVisibilitySetting = BorderVisibilitySetting.Highlight;
+        UpdateRomajiVisibility();
+        UpdateHiraganaVisibility();
     }
 
     public ConvertedUnit Unit
@@ -57,76 +59,170 @@ public sealed partial class EditableLabelGroup : UserControl, INotifyPropertyCha
         set => SetValue(UnitProperty, value);
     }
 
-    public Visibility RomajiPronVisibility
+    public Visibility RomajiVisibility
     {
-        get => (Visibility)GetValue(RomajiPronVisibilityProperty);
+        get => (Visibility)GetValue(RomajiVisibilityProperty);
         set
         {
-            switch (value)
-            {
-                case Visibility.Visible:
-                    RomajiPronLabel.IsEnabled = true;
-                    RomajiPronLabel.Opacity = 1;
-                    RomajiPronLabel.Visibility = Visibility.Visible;
-                    break;
-                case Visibility.Collapsed:
-                    RomajiPronLabel.IsEnabled = false;
-                    RomajiPronLabel.Opacity = 0;
-                    RomajiPronLabel.Visibility = Visibility.Collapsed;
-                    break;
-            }
-
-            SetValue(RomajiPronVisibilityProperty, value);
+            SetValue(RomajiVisibilityProperty, value);
+            UpdateRomajiVisibility();
         }
     }
 
-    public Visibility RomajiKanaVisibility
+    public Visibility HiraganaVisibility
     {
-        get => (Visibility)GetValue(RomajiKanaVisibilityProperty);
+        get => (Visibility)GetValue(HiraganaVisibilityProperty);
         set
         {
-            switch (value)
-            {
-                case Visibility.Visible:
-                    RomajiKanaLabel.IsEnabled = true;
-                    RomajiKanaLabel.Opacity = 1;
-                    RomajiKanaLabel.Visibility = Visibility.Visible;
-                    break;
-                case Visibility.Collapsed:
-                    RomajiKanaLabel.IsEnabled = false;
-                    RomajiKanaLabel.Opacity = 0;
-                    RomajiKanaLabel.Visibility = Visibility.Collapsed;
-                    break;
-            }
-            SetValue(RomajiKanaVisibilityProperty, value);
-        }
-    }
-
-    public HiraganaVisibility HiraganaVisibility
-    {
-        get => (HiraganaVisibility)GetValue(HiraganaVisibilityProperty);
-        set
-        {
-            switch (value)
-            {
-                case HiraganaVisibility.Visible:
-                    HiraganaLabel.IsEnabled = true;
-                    HiraganaLabel.Opacity = 1;
-                    HiraganaLabel.Visibility = Visibility.Visible;
-                    break;
-                case HiraganaVisibility.Collapsed:
-                    HiraganaLabel.IsEnabled = false;
-                    HiraganaLabel.Opacity = 0;
-                    HiraganaLabel.Visibility = Visibility.Collapsed;
-                    break;
-                case HiraganaVisibility.Hidden:
-                    HiraganaLabel.IsEnabled = false;
-                    HiraganaLabel.Opacity = 0;
-                    HiraganaLabel.Visibility = Visibility.Visible;
-                    break;
-            }
-
             SetValue(HiraganaVisibilityProperty, value);
+            UpdateHiraganaVisibility();
+        }
+    }
+
+    public bool IsHyphen
+    {
+        get => (bool)GetValue(IsHyphenProperty);
+        set => SetValue(IsHyphenProperty, value);
+    }
+
+    private static void OnIsHyphenChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is EditableLabelGroup group)
+        {
+            group.UpdateRomajiVisibility();
+            group.UpdateHiraganaVisibility();
+
+            // IsHyphen 변경 시 현재 선택된 항목들을 동기화
+            group.SyncSelectionsOnHyphenChange();
+        }
+    }
+
+    /// <summary>
+    /// IsHyphen 변경 시 선택된 항목들을 동기화
+    /// </summary>
+    private void SyncSelectionsOnHyphenChange()
+    {
+        // 현재 표시되고 있는 항목의 SelectId를 기준으로 다른 항목들을 동기화
+        var currentSelectId = Unit.SelectId;
+
+        // 모든 항목들을 현재 SelectId에 맞춰 동기화
+        var romajiPron = Unit.ReplaceRomajiPron.FirstOrDefault(p => p.Id == currentSelectId);
+        var romajiKana = Unit.ReplaceRomajiKana.FirstOrDefault(p => p.Id == currentSelectId);
+        var hiraganaPron = Unit.ReplaceHiraganaPron.FirstOrDefault(p => p.Id == currentSelectId);
+        var hiraganaKana = Unit.ReplaceHiraganaKana.FirstOrDefault(p => p.Id == currentSelectId);
+
+        if (romajiPron != null)
+        {
+            _selectedRomajiPron = romajiPron;
+            Unit.RomajiPron = romajiPron.Value;
+        }
+
+        if (romajiKana != null)
+        {
+            _selectedRomajiKana = romajiKana;
+            Unit.RomajiKana = romajiKana.Value;
+        }
+
+        if (hiraganaPron != null)
+        {
+            _selectedHiraganaPron = hiraganaPron;
+            Unit.HiraganaPron = hiraganaPron.Value;
+        }
+
+        if (hiraganaKana != null)
+        {
+            _selectedHiraganaKana = hiraganaKana;
+            Unit.HiraganaKana = hiraganaKana.Value;
+        }
+
+        // PropertyChanged 이벤트 발생
+        OnPropertyChanged(nameof(SelectedRomajiPron));
+        OnPropertyChanged(nameof(SelectedRomajiKana));
+        OnPropertyChanged(nameof(SelectedHiraganaPron));
+        OnPropertyChanged(nameof(SelectedHiraganaKana));
+    }
+
+    private void UpdateRomajiVisibility()
+    {
+        if (RomajiVisibility == Visibility.Visible)
+        {
+            if (IsHyphen)
+            {
+                // RomajiPron 표시
+                RomajiPronLabel.IsEnabled = true;
+                RomajiPronLabel.Opacity = 1;
+                RomajiPronLabel.Visibility = Visibility.Visible;
+
+                // RomajiKana 숨김
+                RomajiKanaLabel.IsEnabled = false;
+                RomajiKanaLabel.Opacity = 0;
+                RomajiKanaLabel.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                // RomajiKana 표시
+                RomajiKanaLabel.IsEnabled = true;
+                RomajiKanaLabel.Opacity = 1;
+                RomajiKanaLabel.Visibility = Visibility.Visible;
+
+                // RomajiPron 숨김
+                RomajiPronLabel.IsEnabled = false;
+                RomajiPronLabel.Opacity = 0;
+                RomajiPronLabel.Visibility = Visibility.Collapsed;
+            }
+        }
+        else
+        {
+            // 둘 다 숨김
+            RomajiPronLabel.IsEnabled = false;
+            RomajiPronLabel.Opacity = 0;
+            RomajiPronLabel.Visibility = Visibility.Collapsed;
+
+            RomajiKanaLabel.IsEnabled = false;
+            RomajiKanaLabel.Opacity = 0;
+            RomajiKanaLabel.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private void UpdateHiraganaVisibility()
+    {
+        if (HiraganaVisibility == Visibility.Visible)
+        {
+            if (IsHyphen)
+            {
+                // HiraganaPron 표시
+                HiraganaPronLabel.IsEnabled = true;
+                HiraganaPronLabel.Opacity = 1;
+                HiraganaPronLabel.Visibility = Visibility.Visible;
+
+                // HiraganaKana 숨김
+                HiraganaKanaLabel.IsEnabled = false;
+                HiraganaKanaLabel.Opacity = 0;
+                HiraganaKanaLabel.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                // HiraganaKana 표시
+                HiraganaKanaLabel.IsEnabled = true;
+                HiraganaKanaLabel.Opacity = 1;
+                HiraganaKanaLabel.Visibility = Visibility.Visible;
+
+                // HiraganaPron 숨김
+                HiraganaPronLabel.IsEnabled = false;
+                HiraganaPronLabel.Opacity = 0;
+                HiraganaPronLabel.Visibility = Visibility.Collapsed;
+            }
+        }
+        else
+        {
+            // 둘 다 숨김
+            HiraganaPronLabel.IsEnabled = false;
+            HiraganaPronLabel.Opacity = 0;
+            HiraganaPronLabel.Visibility = Visibility.Collapsed;
+
+            HiraganaKanaLabel.IsEnabled = false;
+            HiraganaKanaLabel.Opacity = 0;
+            HiraganaKanaLabel.Visibility = Visibility.Collapsed;
         }
     }
 
@@ -149,10 +245,37 @@ public sealed partial class EditableLabelGroup : UserControl, INotifyPropertyCha
         {
             if (Equals(value, _selectedRomajiPron)) return;
             _selectedRomajiPron = value;
-            if ((_selectedRomajiPron?.IsSystem ?? true) && (SelectedHiraganaPron?.IsSystem ?? true))
-                SelectedHiraganaPron = Unit.ReplaceHiraganaPron.FirstOrDefault(p => p.Id == _selectedRomajiPron?.Id);
+
+            // RomajiPron 선택 시 같은 ID의 다른 타입들도 동시에 업데이트
+            if ((_selectedRomajiPron?.IsSystem ?? true))
+            {
+                var id = _selectedRomajiPron?.Id ?? 1;
+
+                var correspondingRomajiKana = Unit.ReplaceRomajiKana.FirstOrDefault(p => p.Id == id);
+                if (correspondingRomajiKana != null)
+                {
+                    _selectedRomajiKana = correspondingRomajiKana;
+                    Unit.RomajiKana = correspondingRomajiKana.Value;
+                }
+
+                var correspondingHiraganaPron = Unit.ReplaceHiraganaPron.FirstOrDefault(p => p.Id == id);
+                if (correspondingHiraganaPron != null)
+                {
+                    _selectedHiraganaPron = correspondingHiraganaPron;
+                    Unit.HiraganaPron = correspondingHiraganaPron.Value;
+                }
+
+                var correspondingHiraganaKana = Unit.ReplaceHiraganaKana.FirstOrDefault(p => p.Id == id);
+                if (correspondingHiraganaKana != null)
+                {
+                    _selectedHiraganaKana = correspondingHiraganaKana;
+                    Unit.HiraganaKana = correspondingHiraganaKana.Value;
+                }
+
+                Unit.SelectId = id;
+            }
+
             Unit.RomajiPron = _selectedRomajiPron?.Value ?? string.Empty;
-            Unit.SelectId = _selectedRomajiPron?.Id ?? 1;
             OnPropertyChanged();
         }
     }
@@ -164,40 +287,121 @@ public sealed partial class EditableLabelGroup : UserControl, INotifyPropertyCha
         {
             if (Equals(value, _selectedRomajiKana)) return;
             _selectedRomajiKana = value;
-            if ((_selectedRomajiKana?.IsSystem ?? true) && (SelectedHiraganaKana?.IsSystem ?? true))
-                SelectedHiraganaKana = Unit.ReplaceHiraganaKana.FirstOrDefault(p => p.Id == _selectedRomajiKana?.Id);
+
+            // RomajiKana 선택 시 같은 ID의 다른 타입들도 동시에 업데이트
+            if ((_selectedRomajiKana?.IsSystem ?? true))
+            {
+                var id = _selectedRomajiKana?.Id ?? 1;
+
+                var correspondingRomajiPron = Unit.ReplaceRomajiPron.FirstOrDefault(p => p.Id == id);
+                if (correspondingRomajiPron != null)
+                {
+                    _selectedRomajiPron = correspondingRomajiPron;
+                    Unit.RomajiPron = correspondingRomajiPron.Value;
+                }
+
+                var correspondingHiraganaPron = Unit.ReplaceHiraganaPron.FirstOrDefault(p => p.Id == id);
+                if (correspondingHiraganaPron != null)
+                {
+                    _selectedHiraganaPron = correspondingHiraganaPron;
+                    Unit.HiraganaPron = correspondingHiraganaPron.Value;
+                }
+
+                var correspondingHiraganaKana = Unit.ReplaceHiraganaKana.FirstOrDefault(p => p.Id == id);
+                if (correspondingHiraganaKana != null)
+                {
+                    _selectedHiraganaKana = correspondingHiraganaKana;
+                    Unit.HiraganaKana = correspondingHiraganaKana.Value;
+                }
+
+                Unit.SelectId = id;
+            }
+
             Unit.RomajiKana = _selectedRomajiKana?.Value ?? string.Empty;
-            Unit.SelectId = _selectedRomajiKana?.Id ?? 1;
             OnPropertyChanged();
         }
     }
 
     public ReplaceString SelectedHiraganaPron
     {
-        get => _selectedHiragana;
+        get => _selectedHiraganaPron;
         set
         {
-            if (Equals(value, _selectedHiragana)) return;
-            _selectedHiragana = value;
-            if ((_selectedHiragana?.IsSystem ?? true) && (SelectedRomajiPron?.IsSystem ?? true))
-                SelectedRomajiPron = Unit.ReplaceRomajiPron.FirstOrDefault(p => p.Id == _selectedHiragana?.Id);
-            Unit.HiraganaPron = _selectedHiragana?.Value ?? string.Empty;
-            Unit.SelectId = _selectedHiragana?.Id ?? 1;
+            if (Equals(value, _selectedHiraganaPron)) return;
+            _selectedHiraganaPron = value;
+
+            // HiraganaPron 선택 시 같은 ID의 다른 타입들도 동시에 업데이트
+            if ((_selectedHiraganaPron?.IsSystem ?? true))
+            {
+                var id = _selectedHiraganaPron?.Id ?? 1;
+
+                var correspondingHiraganaKana = Unit.ReplaceHiraganaKana.FirstOrDefault(p => p.Id == id);
+                if (correspondingHiraganaKana != null)
+                {
+                    _selectedHiraganaKana = correspondingHiraganaKana;
+                    Unit.HiraganaKana = correspondingHiraganaKana.Value;
+                }
+
+                var correspondingRomajiPron = Unit.ReplaceRomajiPron.FirstOrDefault(p => p.Id == id);
+                if (correspondingRomajiPron != null)
+                {
+                    _selectedRomajiPron = correspondingRomajiPron;
+                    Unit.RomajiPron = correspondingRomajiPron.Value;
+                }
+
+                var correspondingRomajiKana = Unit.ReplaceRomajiKana.FirstOrDefault(p => p.Id == id);
+                if (correspondingRomajiKana != null)
+                {
+                    _selectedRomajiKana = correspondingRomajiKana;
+                    Unit.RomajiKana = correspondingRomajiKana.Value;
+                }
+
+                Unit.SelectId = id;
+            }
+
+            Unit.HiraganaPron = _selectedHiraganaPron?.Value ?? string.Empty;
             OnPropertyChanged();
         }
     }
-    
+
     public ReplaceString SelectedHiraganaKana
     {
-        get => _selectedHiragana;
+        get => _selectedHiraganaKana;
         set
         {
-            if (Equals(value, _selectedHiragana)) return;
-            _selectedHiragana = value;
-            if ((_selectedHiragana?.IsSystem ?? true) && (SelectedRomajiKana?.IsSystem ?? true))
-                SelectedRomajiKana = Unit.ReplaceRomajiKana.FirstOrDefault(p => p.Id == _selectedHiragana?.Id);
-            Unit.HiraganaKana = _selectedHiragana?.Value ?? string.Empty;
-            Unit.SelectId = _selectedHiragana?.Id ?? 1;
+            if (Equals(value, _selectedHiraganaKana)) return;
+            _selectedHiraganaKana = value;
+
+            // HiraganaKana 선택 시 같은 ID의 다른 타입들도 동시에 업데이트
+            if ((_selectedHiraganaKana?.IsSystem ?? true))
+            {
+                var id = _selectedHiraganaKana?.Id ?? 1;
+
+                var correspondingHiraganaPron = Unit.ReplaceHiraganaPron.FirstOrDefault(p => p.Id == id);
+                if (correspondingHiraganaPron != null)
+                {
+                    _selectedHiraganaPron = correspondingHiraganaPron;
+                    Unit.HiraganaPron = correspondingHiraganaPron.Value;
+                }
+
+                var correspondingRomajiPron = Unit.ReplaceRomajiPron.FirstOrDefault(p => p.Id == id);
+                if (correspondingRomajiPron != null)
+                {
+                    _selectedRomajiPron = correspondingRomajiPron;
+                    Unit.RomajiPron = correspondingRomajiPron.Value;
+                }
+
+                var correspondingRomajiKana = Unit.ReplaceRomajiKana.FirstOrDefault(p => p.Id == id);
+                if (correspondingRomajiKana != null)
+                {
+                    _selectedRomajiKana = correspondingRomajiKana;
+                    Unit.RomajiKana = correspondingRomajiKana.Value;
+                }
+
+                Unit.SelectId = id;
+            }
+
+            Unit.HiraganaKana = _selectedHiraganaKana?.Value ?? string.Empty;
             OnPropertyChanged();
         }
     }
@@ -213,12 +417,12 @@ public sealed partial class EditableLabelGroup : UserControl, INotifyPropertyCha
     {
         RomajiPronLabel.Destroy();
         RomajiKanaLabel.Destroy();
-        HiraganaLabel.Destroy();
-        Bindings.StopTracking();
+        HiraganaPronLabel.Destroy();
+        HiraganaKanaLabel.Destroy();
         ClearValue(UnitProperty);
-        ClearValue(RomajiPronVisibilityProperty);
-        ClearValue(RomajiKanaVisibilityProperty);
+        ClearValue(RomajiVisibilityProperty);
         ClearValue(HiraganaVisibilityProperty);
+        ClearValue(IsHyphenProperty);
         ClearValue(MyFontSizeProperty);
     }
 }

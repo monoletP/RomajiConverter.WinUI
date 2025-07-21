@@ -14,6 +14,7 @@ using RomajiConverter.WinUI.Controls;
 using RomajiConverter.WinUI.Enums;
 using RomajiConverter.WinUI.Extensions;
 using RomajiConverter.WinUI.ValueConverters;
+using RomajiConverter.Core.Models;
 
 namespace RomajiConverter.WinUI.Pages;
 
@@ -40,9 +41,9 @@ public sealed partial class EditPage : Page
     {
         InitializeComponent();
 
-        EditRomajiPronCheckBox.Toggled += EditToggleSwitch_OnToggled;
-        EditRomajiKanaCheckBox.Toggled += EditToggleSwitch_OnToggled;
+        EditRomajiCheckBox.Toggled += EditToggleSwitch_OnToggled;
         EditHiraganaCheckBox.Toggled += EditToggleSwitch_OnToggled;
+        IsHyphenCheckBox.Toggled += EditToggleSwitch_OnToggled;
         IsOnlyShowKanjiCheckBox.Toggled += EditToggleSwitch_OnToggled;
         BorderVisibilityComboBox.SelectionChanged += BorderVisibilityComboBox_OnSelectionChanged;
 
@@ -58,8 +59,8 @@ public sealed partial class EditPage : Page
     /// <summary>
     /// ToggleSwitch控件状态
     /// </summary>
-    public (bool RomajiPron, bool RomajiKana, bool Hiragana, bool IsOnlyShowKanji) ToggleSwitchState => (EditRomajiPronCheckBox.IsOn,
-        EditRomajiKanaCheckBox.IsOn, EditHiraganaCheckBox.IsOn, IsOnlyShowKanjiCheckBox.IsOn);
+    public (bool Romaji, bool Hiragana, bool IsHyphen, bool IsOnlyShowKanji) ToggleSwitchState => (EditRomajiCheckBox.IsOn,
+        EditHiraganaCheckBox.IsOn, IsHyphenCheckBox.IsOn, IsOnlyShowKanjiCheckBox.IsOn);
 
     /// <summary>
     /// 渲染编辑面板
@@ -97,22 +98,12 @@ public sealed partial class EditPage : Page
             {
                 var group = new EditableLabelGroup(unit)
                 {
-                    RomajiPronVisibility = EditRomajiPronCheckBox.IsOn ? Visibility.Visible : Visibility.Collapsed,
-                    RomajiKanaVisibility = EditRomajiKanaCheckBox.IsOn ? Visibility.Visible : Visibility.Collapsed,
+                    RomajiVisibility = EditRomajiCheckBox.IsOn ? Visibility.Visible : Visibility.Collapsed,
+                    HiraganaVisibility = GetHiraganaVisibility(unit),
+                    IsHyphen = IsHyphenCheckBox.IsOn,
                     BorderVisibilitySetting = (BorderVisibilitySetting)BorderVisibilityComboBox.SelectedIndex
                 };
                 group.SetBinding(EditableLabelGroup.MyFontSizeProperty, FontSizeBinding);
-                if (EditHiraganaCheckBox.IsOn)
-                {
-                    if (IsOnlyShowKanjiCheckBox.IsOn && group.Unit.IsKanji == false)
-                        group.HiraganaVisibility = HiraganaVisibility.Hidden;
-                    else
-                        group.HiraganaVisibility = HiraganaVisibility.Visible;
-                }
-                else
-                {
-                    group.HiraganaVisibility = HiraganaVisibility.Collapsed;
-                }
 
                 line.Children.Add(group);
             }
@@ -135,6 +126,24 @@ public sealed partial class EditPage : Page
     }
 
     /// <summary>
+    /// 히라가나 가시성 결정
+    /// </summary>
+    private Visibility GetHiraganaVisibility(ConvertedUnit unit)
+    {
+        if (EditHiraganaCheckBox.IsOn)
+        {
+            if (IsOnlyShowKanjiCheckBox.IsOn && unit.IsKanji == false)
+                return Visibility.Collapsed;
+            else
+                return Visibility.Visible;
+        }
+        else
+        {
+            return Visibility.Collapsed;
+        }
+    }
+
+    /// <summary>
     /// 编辑区的ToggleSwitch通用事件
     /// </summary>
     /// <param name="sender"></param>
@@ -150,40 +159,23 @@ public sealed partial class EditPage : Page
             else
                 continue;
 
-            var isLineContainsKanji = wrapPanel.Children.Any(p => ((EditableLabelGroup)p).Unit.IsKanji);
-
             foreach (EditableLabelGroup editableLabelGroup in wrapPanel.Children)
                 switch (senderName)
                 {
-                    case "EditRomajiPronCheckBox":
-                        editableLabelGroup.RomajiPronVisibility =
-                            EditRomajiPronCheckBox.IsOn ? Visibility.Visible : Visibility.Collapsed;
-                        break;
-                    case "EditRomajiKanaCheckBox":
-                        editableLabelGroup.RomajiKanaVisibility =
-                            EditRomajiKanaCheckBox.IsOn ? Visibility.Visible : Visibility.Collapsed;
+                    case "EditRomajiCheckBox":
+                        editableLabelGroup.RomajiVisibility = EditRomajiCheckBox.IsOn ? Visibility.Visible : Visibility.Collapsed;
                         break;
                     case "EditHiraganaCheckBox":
-                        if (EditHiraganaCheckBox.IsOn)
-                            if (IsOnlyShowKanjiCheckBox.IsOn && !editableLabelGroup.Unit.IsKanji)
-                                if (isLineContainsKanji)
-                                    editableLabelGroup.HiraganaVisibility = HiraganaVisibility.Hidden;
-                                else
-                                    editableLabelGroup.HiraganaVisibility = HiraganaVisibility.Collapsed;
-                            else
-                                editableLabelGroup.HiraganaVisibility = HiraganaVisibility.Visible;
-                        else
-                            editableLabelGroup.HiraganaVisibility = HiraganaVisibility.Collapsed;
+                        editableLabelGroup.HiraganaVisibility = GetHiraganaVisibility(editableLabelGroup.Unit);
+                        break;
+                    case "IsHyphenCheckBox":
+                        editableLabelGroup.IsHyphen = IsHyphenCheckBox.IsOn;
                         break;
                     case "IsOnlyShowKanjiCheckBox":
-                        if (EditHiraganaCheckBox.IsOn && editableLabelGroup.Unit.IsKanji == false)
-                            if (IsOnlyShowKanjiCheckBox.IsOn)
-                                if (isLineContainsKanji)
-                                    editableLabelGroup.HiraganaVisibility = HiraganaVisibility.Hidden;
-                                else
-                                    editableLabelGroup.HiraganaVisibility = HiraganaVisibility.Collapsed;
-                            else
-                                editableLabelGroup.HiraganaVisibility = HiraganaVisibility.Visible;
+                        if (EditHiraganaCheckBox.IsOn)
+                        {
+                            editableLabelGroup.HiraganaVisibility = GetHiraganaVisibility(editableLabelGroup.Unit);
+                        }
                         break;
                 }
         }

@@ -264,6 +264,9 @@
   <data name="InvalidUrl" xml:space="preserve">
     <value>잘못된 URL</value>
   </data>
+  <data name="IsHyphenCheckBox" xml:space="preserve">
+    <value>장음 표기</value>
+  </data>
   <data name="IsOnlyShowKanjiCheckBox.Header" xml:space="preserve">
     <value>한자 히라가나만</value>
   </data>

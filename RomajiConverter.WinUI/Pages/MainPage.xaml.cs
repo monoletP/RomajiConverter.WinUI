@@ -169,16 +169,36 @@ public sealed partial class MainPage : Page
                 foreach (var unit in line.Units)
                 {
                     var renderUnit = new List<string>();
-                    if (MainEditPage.ToggleSwitchState.RomajiPron)
-                        renderUnit.Add(unit.RomajiPron);
-                    if (MainEditPage.ToggleSwitchState.RomajiKana)
-                        renderUnit.Add(unit.RomajiKana);
+
+                    // 로마지 표시 (IsHyphen 상태에 따라 Pron 또는 Kana 선택)
+                    if (MainEditPage.ToggleSwitchState.Romaji)
+                    {
+                        if (MainEditPage.ToggleSwitchState.IsHyphen)
+                            renderUnit.Add(unit.RomajiPron);
+                        else
+                            renderUnit.Add(unit.RomajiKana);
+                    }
+
+                    // 히라가나 표시 (IsHyphen 상태에 따라 Pron 또는 Kana 선택)
                     if (MainEditPage.ToggleSwitchState.Hiragana)
                     {
                         if (MainEditPage.ToggleSwitchState.IsOnlyShowKanji)
-                            renderUnit.Add(unit.IsKanji ? unit.HiraganaPron : " ");
+                        {
+                            if (unit.IsKanji)
+                            {
+                                var hiraganaText = MainEditPage.ToggleSwitchState.IsHyphen ? unit.HiraganaPron : unit.HiraganaKana;
+                                renderUnit.Add(hiraganaText);
+                            }
+                            else
+                            {
+                                renderUnit.Add(" ");
+                            }
+                        }
                         else
-                            renderUnit.Add(unit.HiraganaPron);
+                        {
+                            var hiraganaText = MainEditPage.ToggleSwitchState.IsHyphen ? unit.HiraganaPron : unit.HiraganaKana;
+                            renderUnit.Add(hiraganaText);
+                        }
                     }
 
                     renderUnit.Add(unit.Japanese);
