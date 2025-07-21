@@ -34,7 +34,7 @@
                                   IsOn="True" />
                     <ToggleSwitch x:Uid="NewLineCheckBox" x:Name="NewLineCheckBox" MinWidth="100" Header="每句换行"
                                   IsOn="True" />
-                    <ToggleSwitch x:Uid="RomajiCheckBox" x:Name="RomajiCheckBox" MinWidth="100" Header="로마지"
+                    <ToggleSwitch x:Uid="RomajiCheckBox" x:Name="RomajiCheckBox" MinWidth="100" Header="한글발음"
                                   IsOn="True" />
                     <ToggleSwitch x:Uid="HiraganaCheckBox" x:Name="HiraganaCheckBox" MinWidth="100" Header="平假名" />
                     <ToggleSwitch x:Uid="IsHyphenCheckBox" x:Name="IsHyphenCheckBox" MinWidth="100" Header="장음 표기"

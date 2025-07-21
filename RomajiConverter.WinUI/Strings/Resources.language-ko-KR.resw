@@ -184,7 +184,7 @@
     <value>120</value>
   </data>
   <data name="EditRomajiCheckBox.Header" xml:space="preserve">
-    <value>로마자</value>
+    <value>한글발음</value>
   </data>
   <data name="EditRomajiCheckBox.MinWidth" xml:space="preserve">
     <value>120</value>
@@ -328,7 +328,7 @@
     <value>기본 설정으로 되돌리시겠습니까?</value>
   </data>
   <data name="RomajiCheckBox.Header" xml:space="preserve">
-    <value>로마자</value>
+    <value>한글발음</value>
   </data>
   <data name="RomajiCheckBox.MinWidth" xml:space="preserve">
     <value>120</value>

@@ -170,8 +170,8 @@ namespace RomajiConverter.Test.Helpers
             foreach (var unitString in sentence.LineToUnits())
             {
                 var units = RomajiHelper.SentenceToRomaji(unitString);
-                hiraganaList.Add(string.Join(" ", units.Select(p => p.Hiragana)));
-                romajiList.Add(string.Join(" ", units.Select(p => p.Romaji)));
+                hiraganaList.Add(string.Join(" ", units.Select(p => p.HiraganaKana)));
+                romajiList.Add(string.Join(" ", units.Select(p => p.RomajiKana)));
             }
 
             var result_hiragana = string.Join(" ", hiraganaList);
