@@ -11,6 +11,7 @@ using Microsoft.UI.Xaml.Input;
 using RomajiConverter.WinUI.Extensions;
 using RomajiConverter.Core.Models;
 using System.Threading.Tasks;
+using System.Runtime.ConstrainedExecution;
 
 namespace RomajiConverter.WinUI.Pages;
 
@@ -48,11 +49,7 @@ public sealed partial class OutputPage : Page
         {
             if (isRomaji)
             {
-                // 로마지인 경우 기존 공백 처리 로직 적용
-                if (!SpaceCheckBox.IsOn)
-                    return string.Join("", units.Select(p => (isPron) ? p.RomajiPron : p.RomajiKana));
-
-                // 공백 처리가 활성화된 경우 조사를 앞 단어와 붙임
+                             // 공백 처리
                 var result = new StringBuilder();
                 ConvertedUnit previous = null;
 
@@ -60,39 +57,67 @@ public sealed partial class OutputPage : Page
                 {
                     string unitRomaji = (isPron) ? unit.RomajiPron : unit.RomajiKana;
                     if (previous == null)
-                    {
-                        result.Append(unitRomaji);
-                    }
-                    else if (unit.Pos1 == "助詞" || unit.Pos1 == "助動詞" || unit.Pos1 == "接尾辞")
-                    {
+                    { }
+                    else if (!SpaceCheckBox.IsOn ||
+                        //공백 처리가 비활성화되어 있으면 공백 없이 바로 추가
+                        unit.Pos1 == "助詞" || unit.Pos1 == "助動詞" || unit.Pos1 == "接尾辞"  ||
                         // 조사 또는 조동사 또는 접미사인 경우 공백 없이 바로 추가
-                        result.Append(unitRomaji);
-                    }
-                    else if (unit.Pos2 == "非自立")
-                    {
+                        unit.Pos2 == "非自立" || 
                         //비자립일 경우 공백 없이 바로 추가
-                        result.Append(unitRomaji);
-                    }
-                    else if (previous.Pos1 != "助詞" && unit.Pos2 == "非自立可能")
-                    {
+                        (previous.Pos1 != "助詞" && unit.Pos2 == "非自立可能") ||
                         //앞 품사가 조사가 아니고 비자립가능일 경우 공백 없이 바로 추가
-                        result.Append(unitRomaji);
-                    }
-                    else if (previous.Pos1 == "接頭辞")
-                    {
+                        previous.Pos1 == "接頭辞" || 
                         // 앞 형태소가 접두사인 경우 공백 없이 바로 추가
-                        result.Append(unitRomaji);
-                    }
-                    else if (previous.Pos2 == "数詞" && (unit.Pos2 == "数詞" || unit.Pos3 == "助数詞可能"))
-                    {
+                        (previous.Pos2 == "数詞" && (unit.Pos2 == "数詞" || unit.Pos3 == "助数詞可能"))
                         // 앞 형태소가 수사이고 현재 형태소가 수사 또는 조수사 가능일 경우 공백 없이 바로 추가
-                        result.Append(unitRomaji);
+                        )
+                    {
+                        //바로 앞 글자의 응, 촉음 발음 세분화 
+                        if(result.Length > 1 && unitRomaji.Length > 0)
+                        {
+                            if (nnCheckBox.IsOn)
+                                result[result.Length - 1] = Clarifynn(result[result.Length - 1], unitRomaji[0]);
+                            if (xtsCheckBox.IsOn)
+                                result[result.Length - 1] = Clarifyxts(result[result.Length - 1], unitRomaji[0]);
+                        }
+
                     }
                     else
                     {
+                        //바로 앞 글자의 응 발음 ㅇ으로
+                        if (previous != null && result.Length > 0 && nnCheckBox.IsOn)
+                            result[result.Length - 1] = Clarifynn(result[result.Length - 1], '아');
                         // 그 이외 경우 공백 삽입
-                        result.Append(" ").Append(unitRomaji);
+                        result.Append(" ");
                     }
+
+
+                    //응 발음 세분화
+                    if (unitRomaji.Length > 1 && unit.Pos2 != "固有名詞")
+                    {
+                        string unitRomajiFinal = "";
+                        for(int i = 0; i < unitRomaji.Length - 1; i++)
+                        {
+                            char curRomaji = unitRomaji[i];
+                            if (nnCheckBox.IsOn)
+                                curRomaji = Clarifynn(curRomaji, unitRomaji[i + 1]);
+                            if (xtsCheckBox.IsOn)
+                                curRomaji = Clarifyxts(curRomaji, unitRomaji[i + 1]);
+                            unitRomajiFinal += curRomaji;
+                        }
+                        //마지막 글자 ㄴ 받침일 경우 ㅇ으로
+                        if (nnCheckBox.IsOn)
+                            unitRomajiFinal += Clarifynn(unitRomaji[unitRomaji.Length - 1], '아');
+                        else unitRomajiFinal += unitRomaji[unitRomaji.Length - 1];
+                        result.Append(unitRomajiFinal);
+                    }
+                    //한글자인 경우
+                    else if(unitRomaji.Length == 1 && unit.Pos2 != "固有名詞")
+                    {
+                        if (nnCheckBox.IsOn)
+                            result.Append(Clarifynn(unitRomaji[0], '아'));
+                    }
+                    else result.Append(unitRomaji);
 
                     previous = unit;
                 }
@@ -151,10 +176,20 @@ public sealed partial class OutputPage : Page
 
                                 // 새 문자 생성
                                 char newChar = (char)(baseCode + (choseongIndex * 21 * 28) + (jungseongIndex * 28) + jongseongIndex);
+                                
+                                if (i != resultString.Length - 1)
+                                {
+                                    //다음 글자와 비교해 응, 촉음 발음 세분화
+                                    if (nnCheckBox.IsOn)
+                                        newChar = Clarifynn(newChar, resultString[i + 1]);
+                                    if (xtsCheckBox.IsOn)
+                                        newChar = Clarifyxts(newChar, resultString[i + 1]);
+                                }
 
                                 // 결과에 추가 (이전 글자는 제거, 새 글자 추가)
                                 finalResult.Length--; // 마지막 글자 제거
                                 finalResult.Append(newChar);
+
                                 continue; // 현재 문자는 처리 완료했으므로 건너뛰기
                             }
                         }
@@ -231,6 +266,106 @@ public sealed partial class OutputPage : Page
         if (App.ConvertedLineList.Any())
             output.Remove(output.Length - Environment.NewLine.Length, Environment.NewLine.Length);
         return output.ToString();
+    }
+
+    private char Clarifynn(char previous, char cur)
+    {
+        if (previous < 0xAC00 || previous > 0xD7A3)
+            return previous;
+        int unicodeValue = previous;
+        int baseCode = 0xAC00;
+        int choseongIndex = (unicodeValue - baseCode) / (21 * 28);
+        int jungseongIndex = ((unicodeValue - baseCode) % (21 * 28)) / 28;
+        int jongseongIndex = (unicodeValue - baseCode) % 28;
+
+        if (jongseongIndex == 4 || jongseongIndex == 21 || jongseongIndex == 16) //종성이 ㄴ, ㅇ, ㅁ
+        {
+            if (cur == ' ')
+            {
+                //cur 글자가 공백일 경우
+                //종성을 ㅇ으로 변환
+                jongseongIndex = 21;
+            }
+            else if (cur >= 0xAC00 && cur <= 0xD7A3)
+            {
+                int nextChoseongIndex = (cur - baseCode) / (21 * 28);
+                if (nextChoseongIndex == 0 || nextChoseongIndex == 15 || nextChoseongIndex == 11)
+                {
+                    //cur 글자의 초성이 ㄱ, ㅋ, ㅇ인 경우
+                    //종성을 ㅇ으로 변환
+                    jongseongIndex = 21;
+                }
+                else if (nextChoseongIndex == 6 || nextChoseongIndex == 7 || nextChoseongIndex == 17)
+                {
+                    //cur 글자의 초성이 ㅁ, ㅂ, ㅍ인 경우
+                    //종성을 ㅁ으로 변환
+                    jongseongIndex = 16;
+                }
+                else
+                {
+                    //그 이외는 ㄴ으로
+                    jongseongIndex = 4;
+                }
+            }
+        }
+
+        char ret = (char)(baseCode + (choseongIndex * 21 * 28) + (jungseongIndex * 28) + jongseongIndex);
+        return ret;
+    }
+
+    private char Clarifyxts(char previous, char cur)
+    {
+        if (previous < 0xAC00 || previous > 0xD7A3)
+            return previous;
+        int unicodeValue = previous;
+        int baseCode = 0xAC00;
+        int choseongIndex = (unicodeValue - baseCode) / (21 * 28);
+        int jungseongIndex = ((unicodeValue - baseCode) % (21 * 28)) / 28;
+        int jongseongIndex = (unicodeValue - baseCode) % 28;
+
+        if (jongseongIndex == 19 || jongseongIndex == 1 || jongseongIndex == 7 || jongseongIndex == 17 || jongseongIndex == 8) //종성이 ㅅ, ㄱ, ㄷ, ㅂ, ㄹ
+        {
+            if (cur == ' ')
+            {
+                //cur 글자가 공백일 경우 무시
+            }
+            else if (cur >= 0xAC00 && cur <= 0xD7A3)
+            {
+                int nextChoseongIndex = (cur - baseCode) / (21 * 28);
+                if (nextChoseongIndex == 15)
+                {
+                    //cur 글자의 초성이 ㅋ인 경우
+                    //종성을 ㄱ으로 변환
+                    jongseongIndex = 1;
+                }
+                else if (nextChoseongIndex == 16)
+                {
+                    //cur 글자의 초성이 ㅌ인 경우
+                    //종성을 ㄷ으로 변환
+                    jongseongIndex = 7;
+                }
+                else if (nextChoseongIndex == 17)
+                {
+                    //cur 글자의 초성이 ㅍ인 경우
+                    //종성을 ㅂ로 변환
+                    jongseongIndex = 17;
+                }
+                else if (nextChoseongIndex == 5)
+                {
+                    //cur 글자의 초성이 ㄹ인 경우
+                    //종성을 ㄹ로 변환
+                    jongseongIndex = 8;
+                }
+                else
+                {
+                    //그 외는 ㅅ으로
+                    jongseongIndex = 19;
+                }
+            }
+        }
+
+        char ret = (char)(baseCode + (choseongIndex * 21 * 28) + (jungseongIndex * 28) + jongseongIndex);
+        return ret;
     }
 
     /// <summary>

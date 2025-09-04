@@ -297,6 +297,9 @@
   <data name="NewLineCheckBox.MinWidth" xml:space="preserve">
     <value>120</value>
   </data>
+  <data name="nnCheckBox" xml:space="preserve">
+    <value>ん 세분화</value>
+  </data>
   <data name="No" xml:space="preserve">
     <value>아니오</value>
   </data>
@@ -371,6 +374,9 @@
   </data>
   <data name="VersionSettingExpander.Header" xml:space="preserve">
     <value>버전</value>
+  </data>
+  <data name="xtsCheckBox" xml:space="preserve">
+    <value>っ 세분화</value>
   </data>
   <data name="Yes" xml:space="preserve">
     <value>예</value>

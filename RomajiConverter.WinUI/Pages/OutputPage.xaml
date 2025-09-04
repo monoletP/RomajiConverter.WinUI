@@ -39,6 +39,10 @@
                     <ToggleSwitch x:Uid="HiraganaCheckBox" x:Name="HiraganaCheckBox" MinWidth="100" Header="平假名" />
                     <ToggleSwitch x:Uid="IsHyphenCheckBox" x:Name="IsHyphenCheckBox" MinWidth="100" Header="장음 표기"
                                   IsOn="True" />
+                    <ToggleSwitch x:Uid="nnCheckBox" x:Name="nnCheckBox" MinWidth="100" Header="ん 세분화"
+              IsOn="True" />
+                    <ToggleSwitch x:Uid="xtsCheckBox" x:Name="xtsCheckBox" MinWidth="100" Header="っ 세분화"
+IsOn="True" />
                     <ToggleSwitch x:Uid="JPCheckBox" x:Name="JPCheckBox" MinWidth="100" Header="日文" IsOn="True" />
                     <ToggleSwitch x:Uid="KanjiHiraganaCheckBox" x:Name="KanjiHiraganaCheckBox" MinWidth="100"
                                   Header="汉字假名标注" />
